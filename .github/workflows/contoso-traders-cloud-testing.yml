@@ -41,6 +41,8 @@ env:
   UI_CDN_ENDPOINT_NAME: contoso-traders-ui2
   UI_STORAGE_ACCOUNT_NAME: contosotradersui2
   USER_ASSIGNED_MANAGED_IDENTITY_NAME: contoso-traders-mi-kv-access
+  PROD_VM: 13.80.183.22
+  CART_VM: 40.118.83.32
 
 jobs:
   provision:
@@ -401,9 +403,9 @@ jobs:
       # section #4: deploy the ui
       #
       - name: set REACT_APP_APIURLSHOPPINGCART
-        run: echo "REACT_APP_APIURLSHOPPINGCART"="https://${{ steps.get-cartsApiEndpoint.outputs.cartsApiEndpoint }}/v1" >> $GITHUB_ENV
+        run: echo "REACT_APP_APIURLSHOPPINGCART"="http://${{ env.CART_VM }}/" >> $GITHUB_ENV
       - name: set REACT_APP_APIURL
-        run: echo "REACT_APP_APIURL"="https://${{ steps.get-productsApiEndpoint.outputs.productsApiEndpoint }}/v1" >> $GITHUB_ENV
+        run: echo "REACT_APP_APIURL"="http://${{ env.PROD_VM }}/" >> $GITHUB_ENV
       - name: set REACT_APP_B2CCLIENTID
         if: ${{ env.AADUSERNAME != '' && env.AADPASSWORD != '' }}
         run: echo "REACT_APP_B2CCLIENTID"="${{ steps.get-azureAdAppClientId.outputs.azureAdAppClientId }}" >> $GITHUB_ENV
