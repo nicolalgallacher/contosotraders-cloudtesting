@@ -403,9 +403,9 @@ jobs:
       # section #4: deploy the ui
       #
       - name: set REACT_APP_APIURLSHOPPINGCART
-        run: echo "REACT_APP_APIURLSHOPPINGCART"="http://${{ env.CART_VM }}/" >> $GITHUB_ENV
+        run: echo "REACT_APP_APIURLSHOPPINGCART"="http://${{ env.CART_VM }}/v1/" >> $GITHUB_ENV
       - name: set REACT_APP_APIURL
-        run: echo "REACT_APP_APIURL"="http://${{ env.PROD_VM }}/" >> $GITHUB_ENV
+        run: echo "REACT_APP_APIURL"="http://${{ env.PROD_VM }}/v1/" >> $GITHUB_ENV
       - name: set REACT_APP_B2CCLIENTID
         if: ${{ env.AADUSERNAME != '' && env.AADPASSWORD != '' }}
         run: echo "REACT_APP_B2CCLIENTID"="${{ steps.get-azureAdAppClientId.outputs.azureAdAppClientId }}" >> $GITHUB_ENV
