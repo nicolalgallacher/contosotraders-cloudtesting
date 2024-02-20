@@ -1339,7 +1339,7 @@ resource aks_roleassignmentforchaosexp 'Microsoft.Authorization/roleAssignments@
 // virtual network
 //
 
-resource vnet 'Microsoft.Network/virtualNetworks@2022-07-01' =  {
+resource vnet 'Microsoft.Network/virtualNetworks@2022-07-01' = if (deployPrivateEndpoints) {
   name: vnetName
   location: resourceLocation
   tags: resourceTags
