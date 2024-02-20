@@ -41,8 +41,8 @@ env:
   UI_CDN_ENDPOINT_NAME: contoso-traders-ui2
   UI_STORAGE_ACCOUNT_NAME: contosotradersui2
   USER_ASSIGNED_MANAGED_IDENTITY_NAME: contoso-traders-mi-kv-access
-  PROD_VM: 13.80.183.22
-  CART_VM: 40.118.83.32
+  PROD_VM: jjprodapi.westeurope.cloudapp.azure.com
+  CART_VM: jjcartapi.westeurope.cloudapp.azure.com
 
 jobs:
   provision:
