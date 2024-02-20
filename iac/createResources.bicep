@@ -1401,6 +1401,9 @@ module vnetAcaSubnetNsg './modules/createNsg.bicep' = if (deployPrivateEndpoints
       nsgRules: []
       resourceTags: resourceTags
     }
+    dependsOn: [
+       vnet
+    ]
 }
 
 module vnetVmSubnetNsg './modules/createNsg.bicep' = if (deployPrivateEndpoints) {
@@ -1411,6 +1414,9 @@ module vnetVmSubnetNsg './modules/createNsg.bicep' = if (deployPrivateEndpoints)
       nsgRules: []
       resourceTags: resourceTags
     }
+    dependsOn: [
+      vnet
+   ]
 }
 
 module vnetLoadTestSubnetNsg './modules/createNsg.bicep' = if (deployPrivateEndpoints) {
@@ -1421,6 +1427,9 @@ module vnetLoadTestSubnetNsg './modules/createNsg.bicep' = if (deployPrivateEndp
       nsgRules: []
       resourceTags: resourceTags
     }
+    dependsOn: [
+      vnet
+   ]
 }
 
 module vnetDBSubnetNsg './modules/createNsg.bicep' = if (deployPrivateEndpoints) {
@@ -1431,6 +1440,9 @@ module vnetDBSubnetNsg './modules/createNsg.bicep' = if (deployPrivateEndpoints)
       nsgRules: []
       resourceTags: resourceTags
     }
+    dependsOn: [
+      vnet
+   ]
 }
 
 module vnetWebSubnetNsg './modules/createNsg.bicep' = if (deployPrivateEndpoints) {
@@ -1441,6 +1453,9 @@ module vnetWebSubnetNsg './modules/createNsg.bicep' = if (deployPrivateEndpoints
       nsgRules: []
       resourceTags: resourceTags
     }
+    dependsOn: [
+      vnet
+   ]
 }
 
 // attach NSGs to subnets
@@ -1456,6 +1471,9 @@ module attachNsgAca './modules/updateSubnet.bicep' = if (deployPrivateEndpoints)
       }
     })
   }
+  dependsOn: [
+    vnetAcaSubnetNsg
+  ]
   
 }
 
