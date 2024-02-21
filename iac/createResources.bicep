@@ -32,7 +32,8 @@ param sqlServerHostName string = environment().suffixes.sqlServerHostname
 // use param to conditionally deploy private endpoint resources
 param deployPrivateEndpoints bool = false
 
-
+// use param to conditionally deploy private endpoint resources
+param deployVmBasedApis bool = false
 
 // variables
 ////////////////////////////////////////////////////////////////////////////////
@@ -152,6 +153,10 @@ var vnetDBSubnetName = 'subnet-db'
 var vnetDBSubnetAddressPrefix = '10.0.8.0/23'
 var vnetBastionSubnetName = 'AzureBastionSubnet'
 var vnetBastionSubnetAddressPrefix = '10.0.10.0/23'
+
+// VM-based docker APIs (JM+)
+var productApiCname = '${prefixHyphenated}-prodapi${suffix}'
+var cartApiCname = '${prefixHyphenated}-cartapi${suffix}'
 
 // bastion
 var bastionHostName = '${prefixHyphenated}-bastion${suffix}'
@@ -1732,6 +1737,27 @@ resource cartsinternalapiaca 'Microsoft.App/containerApps@2022-06-01-preview' = 
       ]
     }
   }
+}
+
+
+//
+// docker VMs for APIs (JM+)
+//
+module dockerVms './create-docker-vms.bicep' = if (deployVmBasedApis) {
+  name: 'createDockerVms'
+    params: {
+      location: resourceLocation
+      nsgName: '${vnetVmSubnetName}-nsg-${resourceLocation}'
+      nsgRules: []
+      resourceTags: resourceTags
+      adminUsername: 'localadmin'
+      adminPassword: sqlPassword
+      managedIdentityId: userassignedmiforkvaccess.id
+      vnet: vnetName
+      subnet: vnetVmSubnetName
+      cartCname: cartApiCname
+      productCname: productApiCname
+    }
 }
 
 //
