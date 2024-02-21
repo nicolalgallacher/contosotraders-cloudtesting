@@ -1747,14 +1747,11 @@ module dockerVms './create-docker-vms.bicep' = if (deployVmBasedApis) {
   name: 'createDockerVms'
     params: {
       location: resourceLocation
-      nsgName: '${vnetVmSubnetName}-nsg-${resourceLocation}'
-      nsgRules: []
       resourceTags: resourceTags
       adminUsername: 'localadmin'
       adminPassword: sqlPassword
       managedIdentityId: userassignedmiforkvaccess.id
-      vnet: vnetName
-      subnet: vnetVmSubnetName
+      subnetId: vnet.properties.subnets[1].id
       cartCname: cartApiCname
       productCname: productApiCname
     }
