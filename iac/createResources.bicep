@@ -1587,7 +1587,7 @@ module bastionHost './modules/createBastion.bicep' = if (deployPrivateEndpoints)
 //
 // IIS VMs 
 //
-module iisVMs 'modules/createIisVm.bicep' = { //TODO: Add Feature Flag 
+module iisVMs './modules/createIisVM.bicep' = { //TODO: Add Feature Flag 
   name: 'createIIS'
   params: {
     location:resourceLocation
