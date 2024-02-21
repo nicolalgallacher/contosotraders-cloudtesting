@@ -14,6 +14,11 @@ param suffix string
 @description('A password which will be set on all SQL Azure DBs.')
 param sqlPassword string // @TODO: Obviously, we need to fix this!
 
+//IIS Params 
+@secure()
+@description('Password set for IIS machines, pulled from yaml config / Github secrets')
+param iisVmPassword string 
+
 param resourceLocation string = resourceGroup().location
 
 // tenant
@@ -35,6 +40,7 @@ param deployPrivateEndpoints bool = false
 
 // use param to conditionally deploy SQL on IAAS
 param deploySqlOnIaas bool = false
+
 
 
 
@@ -176,6 +182,10 @@ var sqlVmAdminLogin = 'localadmin'
 var sqlVmAdminPassword = sqlPassword
 var sqlVmShutdownScheduleName = 'shutdown-computevm-sqlvm'
 var sqlVmShutdownScheduleTimezoneId = 'UTC'
+
+//iis vm's
+var iisVmUsername = 'iisAdmin'
+
 
 // private dns zone
 var privateDnsZoneVnetLinkName = '${prefixHyphenated}-privatednszone-vnet-link${suffix}'
@@ -1574,93 +1584,109 @@ module bastionHost './modules/createBastion.bicep' = if (deployPrivateEndpoints)
   }
 }
 
+//
+// IIS VMs 
+//
+module iisVMs 'modules/createIisVm.bicep' = { //TODO: Add Feature Flag 
+  name: 'createIIS'
+  params: {
+    location:resourceLocation
+    adminPassword: iisVmPassword
+    adminUsername: iisVmUsername 
+    exsistingSubnetName:vnetWebSubnetName 
+    exsistingVirtualNetworkName: vnetName 
+    exsitingVNetResourceGroup: resourceGroup().name
+  }
+  
+
+  }
 
 //
 // jumpbox vm
 // 
 
 // network interface controller
-resource jumpboxnic 'Microsoft.Network/networkInterfaces@2022-07-01' = if (deployPrivateEndpoints) {
-  name: jumpboxNicName
-  location: resourceLocation
-  tags: resourceTags
-  properties: {
-    ipConfigurations: [
-      {
-        name: 'nic-ip-config'
-        properties: {
-          primary: true
-          privateIPAllocationMethod: 'Dynamic'
-          subnet: {
-            id: deployPrivateEndpoints ? vnet.properties.subnets[1].id : ''
-          }
-        }
-      }
-    ]
-    nicType: 'Standard'
-  }
-}
+// resource jumpboxnic 'Microsoft.Network/networkInterfaces@2022-07-01' = if (deployPrivateEndpoints) {
+//   name: jumpboxNicName
+//   location: resourceLocation
+//   tags: resourceTags
+//   properties: {
+//     ipConfigurations: [
+//       {
+//         name: 'nic-ip-config'
+//         properties: {
+//           primary: true
+//           privateIPAllocationMethod: 'Dynamic'
+//           subnet: {
+//             id: deployPrivateEndpoints ? vnet.properties.subnets[1].id : ''
+//           }
+//         }
+//       }
+//     ]
+//     nicType: 'Standard'
+//   }
+// }
 
-// virtual machine
-resource jumpboxvm 'Microsoft.Compute/virtualMachines@2022-08-01' = if (deployPrivateEndpoints) {
-  name: jumpboxVmName
-  location: resourceLocation
-  tags: resourceTags
-  properties: {
-    hardwareProfile: {
-      vmSize: 'standard_b2s'
-    }
-    storageProfile: {
-      osDisk: {
-        createOption: 'FromImage'
-        managedDisk: {
-          storageAccountType: 'StandardSSD_LRS'
-        }
-      }
-      imageReference: {
-        offer: 'WindowsServer'
-        publisher: 'MicrosoftWindowsServer'
-        sku: '2019-datacenter-gensecond'
-        version: 'latest'
-      }
-    }
-    networkProfile: {
-      networkInterfaces: [
-        {
-          id: deployPrivateEndpoints ? jumpboxnic.id : ''
-          properties: {
-            deleteOption: 'Delete'
-          }
-        }
-      ]
-    }
-    osProfile: {
-      adminPassword: jumpboxVmAdminPassword
-      #disable-next-line adminusername-should-not-be-literal // @TODO: This is a temporary hack, until we can generate the password
-      adminUsername: jumpboxVmAdminLogin
-      computerName: jumpboxVmName
-    }
-  }
-}
+// // virtual machine
+// resource jumpboxvm 'Microsoft.Compute/virtualMachines@2022-08-01' = if (deployPrivateEndpoints) {
+//   name: jumpboxVmName
+//   location: resourceLocation
+//   tags: resourceTags
+//   properties: {
+//     hardwareProfile: {
+//       vmSize: 'standard_b2s'
+//     }
+//     storageProfile: {
+//       osDisk: {
+//         createOption: 'FromImage'
+//         managedDisk: {
+//           storageAccountType: 'StandardSSD_LRS'
+//         }
+//       }
+//       imageReference: {
+//         offer: 'WindowsServer'
+//         publisher: 'MicrosoftWindowsServer'
+//         sku: '2019-datacenter-gensecond'
+//         version: 'latest'
+//       }
+//     }
+//     networkProfile: {
+//       networkInterfaces: [
+//         {
+//           id: deployPrivateEndpoints ? jumpboxnic.id : ''
+//           properties: {
+//             deleteOption: 'Delete'
+//           }
+//         }
+//       ]
+//     }
+//     osProfile: {
+//       adminPassword: jumpboxVmAdminPassword
+//       #disable-next-line adminusername-should-not-be-literal // @TODO: This is a temporary hack, until we can generate the password
+//       adminUsername: jumpboxVmAdminLogin
+//       computerName: jumpboxVmName
+//     }
+//   }
+// }
 
-// auto-shutdown schedule
-resource jumpboxvmschedule 'Microsoft.DevTestLab/schedules@2018-09-15' = if (deployPrivateEndpoints) {
-  name: jumpboxVmShutdownScheduleName
-  location: resourceLocation
-  tags: resourceTags
-  properties: {
-    targetResourceId: deployPrivateEndpoints ? jumpboxvm.id : ''
-    dailyRecurrence: {
-      time: '2100'
-    }
-    notificationSettings: {
-      status: 'Disabled'
-    }
-    status: 'Enabled'
-    taskType: 'ComputeVmShutdownTask'
-    timeZoneId: jumpboxVmShutdownScheduleTimezoneId
-  }
-}
+// // auto-shutdown schedule
+// resource jumpboxvmschedule 'Microsoft.DevTestLab/schedules@2018-09-15' = if (deployPrivateEndpoints) {
+//   name: jumpboxVmShutdownScheduleName
+//   location: resourceLocation
+//   tags: resourceTags
+//   properties: {
+//     targetResourceId: deployPrivateEndpoints ? jumpboxvm.id : ''
+//     dailyRecurrence: {
+//       time: '2100'
+//     }
+//     notificationSettings: {
+//       status: 'Disabled'
+//     }
+//     status: 'Enabled'
+//     taskType: 'ComputeVmShutdownTask'
+//     timeZoneId: jumpboxVmShutdownScheduleTimezoneId
+//   }
+// }
 
 //
 // SQL Servers
