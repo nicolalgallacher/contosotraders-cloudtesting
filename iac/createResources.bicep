@@ -169,12 +169,12 @@ var vnetBastionSubnetAddressPrefix = '10.0.10.0/23'
 var bastionHostName = '${prefixHyphenated}-bastion${suffix}'
 
 // jumpbox vm
-var jumpboxNicName = '${prefixHyphenated}-jumpbox${suffix}'
-var jumpboxVmName = 'jumpboxvm'
-var jumpboxVmAdminLogin = 'localadmin'
-var jumpboxVmAdminPassword = sqlPassword
-var jumpboxVmShutdownScheduleName = 'shutdown-computevm-jumpboxvm'
-var jumpboxVmShutdownScheduleTimezoneId = 'UTC'
+// var jumpboxNicName = '${prefixHyphenated}-jumpbox${suffix}'
+// var jumpboxVmName = 'jumpboxvm'
+// var jumpboxVmAdminLogin = 'localadmin'
+// var jumpboxVmAdminPassword = sqlPassword
+// var jumpboxVmShutdownScheduleName = 'shutdown-computevm-jumpboxvm'
+// var jumpboxVmShutdownScheduleTimezoneId = 'UTC'
 
 // sql vm
 var sqlVmPrefix = 'sqlvm' // this is different to the DbServerName variables as it needs to be shorter than 15 characters
