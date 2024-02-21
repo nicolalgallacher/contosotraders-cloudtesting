@@ -1,29 +1,14 @@
-param location string = 'westeurope'
+param location string
+param resourceTags string
+param adminUsername string
+param adminPassword string 
+param managedIdentityId string
+param subnetId string:
+param cartCname string
+param productCname string
 param cartvmName string = 'cartVM'
 param prodvmName string = 'prodVM'
-param adminUsername string = 'azureadmin'
-param adminPassword string 
-param managedIdentityId string = '/subscriptions/41bcf9d5-ccdd-4903-821e-a368aac35830/resourcegroups/contoso-traders-rgjjj/providers/Microsoft.ManagedIdentity/userAssignedIdentities/contoso-traders-mi-kv-accessjjj'
-
-resource myVnet 'Microsoft.Network/virtualNetworks@2021-02-01' = {
-  name: 'myVnet'
-  location: location
-  properties: {
-    addressSpace: {
-      addressPrefixes: [
-        '10.0.0.0/16'
-      ]
-    }
-    subnets: [
-      {
-        name: 'default'
-        properties: {
-          addressPrefix: '10.0.0.0/24'
-        }
-      }
-    ]
-  }
-}
+ 
 
 resource cartPublicIP 'Microsoft.Network/publicIPAddresses@2021-02-01' = {
   name: 'cartPublicIP'
@@ -32,7 +17,6 @@ resource cartPublicIP 'Microsoft.Network/publicIPAddresses@2021-02-01' = {
     publicIPAllocationMethod: 'Dynamic'
   }
 }
-
 
 resource cartNIC 'Microsoft.Network/networkInterfaces@2021-02-01' = {
   name: 'cartNIC'
@@ -43,7 +27,7 @@ resource cartNIC 'Microsoft.Network/networkInterfaces@2021-02-01' = {
         name: 'myIPConfig'
         properties: {
           subnet: {
-            id: myVnet.properties.subnets[0].id
+            id: subnetId
           }
           publicIPAddress: {
             id: cartPublicIP.id
@@ -127,7 +111,7 @@ resource prodNIC 'Microsoft.Network/networkInterfaces@2021-02-01' = {
         name: 'myIPConfig'
         properties: {
           subnet: {
-            id: myVnet.properties.subnets[0].id
+            id: subnetId
           }
           publicIPAddress: {
             id: prodPublicIP.id
