@@ -1417,16 +1417,15 @@ module vnetVmSubnetNsg './modules/createNsg.bicep' = if (deployPrivateEndpoints)
       nsgRules: [
         {
            name: 'AllowAnyHTTPInbound'
-           properties: {
-              protocol: 'TCP'
-              sourcePortRange: '*'
-              destinationPortRange: '80'
-              sourceAddressPrefix: '*'
-              destinationAddressPrefix: '*'
-              access: 'Allow'
-              priority: 100
-              direction: 'Inbound'
-           }
+           protocol: 'TCP'
+           sourcePortRange: '*'
+           destinationPortRange: '80'
+           sourceAddressPrefix: '*'
+           destinationAddressPrefix: '*'
+           access: 'Allow'
+           priority: 100
+           direction: 'Inbound'
+        }
       ]
       resourceTags: resourceTags
     }
