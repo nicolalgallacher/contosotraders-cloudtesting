@@ -1426,7 +1426,7 @@ module vnetVmSubnetNsg './modules/createNsg.bicep' = if (deployPrivateEndpoints)
            access: 'Allow'
            priority: 100
            direction: 'Inbound'
-        },
+        }
         {
            name: 'SSHInbound'
            protocol: 'TCP'
@@ -1911,3 +1911,6 @@ resource chaosaksexperiment 'Microsoft.Chaos/experiments@2022-10-01-preview' = {
 
 output cartsApiEndpoint string = 'https://${cartsapiaca.properties.configuration.ingress.fqdn}'
 output uiCdnEndpoint string = 'https://${cdnprofile_ui2endpoint.properties.hostName}'
+// JM+
+output productApiCname
+output cartApiCname
