@@ -4,7 +4,7 @@ param adminUsername string
 param adminPassword string 
 
 param managedIdentityId string
-param subnetId string:
+param subnetId string
 param cartCname string
 param productCname string
 param resourceTags object
