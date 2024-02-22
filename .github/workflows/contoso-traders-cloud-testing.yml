@@ -248,7 +248,7 @@ jobs:
          azcliversion: 2.0.72
          inlineScript: |
           az login --service-principal -u ${{ env.clientId }} -p ${{ env.clientSecret }} --tenant ${{ env.tenantId }}
-          az vm run-command invoke -g ${{ env.RESOURCE_GROUP_NAME }}${{ vars.SUFFIX }} -n ${{ env.CART_VM_NAME }} --command-id RunShellScript --scripts "docker login --username ${{ env.ACR_NAME }}${{ vars.SUFFIX }} --password ${{ secrets.ACRPASSWORD }} ${{ env.ACR_NAME }}${{ vars.SUFFIX }}.azurecr.io && docker pull ${{ env.ACR_NAME }}${{ vars.SUFFIX }}.azurecr.io/${{ env.CARTS_ACR_REPOSITORY_NAME }}:${{ github.sha }} && docker run -d --restart=always -p 80:80 ${{ env.ACR_NAME }}${{ vars.SUFFIX }}.azurecr.io/${{ env.CARTS_ACR_REPOSITORY_NAME }}:${{ github.sha }}"
+          az vm run-command invoke -g ${{ env.RESOURCE_GROUP_NAME }}${{ vars.SUFFIX }} -n ${{ env.CART_VM_NAME }} --command-id RunShellScript --scripts "docker login --username ${{ env.ACR_NAME }}${{ vars.SUFFIX }} --password ${{ secrets.ACRPASSWORD }} ${{ env.ACR_NAME }}${{ vars.SUFFIX }}.azurecr.io && docker pull ${{ env.ACR_NAME }}${{ vars.SUFFIX }}.azurecr.io/${{ env.CARTS_ACR_REPOSITORY_NAME }}:${{ github.sha }} && docker run -d --restart=always -p 80:80 -e KeyVaultEndpoint='https://contosotraderskvjjjj.vault.azure.net/' -e ManagedIdentityClientId='da933488-3dee-4f5f-b6cf-583dc1839a07'  ${{ env.ACR_NAME }}${{ vars.SUFFIX }}.azurecr.io/${{ env.CARTS_ACR_REPOSITORY_NAME }}:${{ github.sha }}"
         env:
          AZURE_SUBSCRIPTION_ID: ${{ env.subscriptionId }}
       
@@ -277,7 +277,7 @@ jobs:
          azcliversion: 2.0.72
          inlineScript: |
           az login --service-principal -u ${{ env.clientId }} -p ${{ env.clientSecret }} --tenant ${{ env.tenantId }}
-          az vm run-command invoke -g ${{ env.RESOURCE_GROUP_NAME }}${{ vars.SUFFIX }} -n ${{ env.PROD_VM_NAME }} --command-id RunShellScript --scripts "docker login --username ${{ env.ACR_NAME }}${{ vars.SUFFIX }} --password ${{ secrets.ACRPASSWORD }} ${{ env.ACR_NAME }}${{ vars.SUFFIX }}.azurecr.io && docker pull ${{ env.ACR_NAME }}${{ vars.SUFFIX }}.azurecr.io/${{ env.CARTS_ACR_REPOSITORY_NAME }}:${{ github.sha }} && docker run -d --restart=always -p 80:80 ${{ env.ACR_NAME }}${{ vars.SUFFIX }}.azurecr.io/${{ env.PRODUCTS_ACR_REPOSITORY_NAME }}:${{ github.sha }}"
+          az vm run-command invoke -g ${{ env.RESOURCE_GROUP_NAME }}${{ vars.SUFFIX }} -n ${{ env.PROD_VM_NAME }} --command-id RunShellScript --scripts "docker login --username ${{ env.ACR_NAME }}${{ vars.SUFFIX }} --password ${{ secrets.ACRPASSWORD }} ${{ env.ACR_NAME }}${{ vars.SUFFIX }}.azurecr.io && docker pull ${{ env.ACR_NAME }}${{ vars.SUFFIX }}.azurecr.io/${{ env.CARTS_ACR_REPOSITORY_NAME }}:${{ github.sha }} && docker run -d --restart=always -p 80:80 -e KeyVaultEndpoint='https://contosotraderskvjjjj.vault.azure.net/' -e ManagedIdentityClientId='da933488-3dee-4f5f-b6cf-583dc1839a07'  ${{ env.ACR_NAME }}${{ vars.SUFFIX }}.azurecr.io/${{ env.PRODUCTS_ACR_REPOSITORY_NAME }}:${{ github.sha }}"
         env:
          AZURE_SUBSCRIPTION_ID: ${{ env.subscriptionId }}
       
