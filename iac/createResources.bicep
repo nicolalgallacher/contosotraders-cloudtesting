@@ -1912,5 +1912,5 @@ resource chaosaksexperiment 'Microsoft.Chaos/experiments@2022-10-01-preview' = {
 output cartsApiEndpoint string = 'https://${cartsapiaca.properties.configuration.ingress.fqdn}'
 output uiCdnEndpoint string = 'https://${cdnprofile_ui2endpoint.properties.hostName}'
 // JM+
-output productVmApiEndpoint string = '${productApiCname}'
-output cartVmApiEndpoint string = '${cartApiCname}'
+output productVmApiEndpoint string = productApiCname
+output cartVmApiEndpoint string = cartApiCname
