@@ -18,6 +18,10 @@ resource cartPublicIP 'Microsoft.Network/publicIPAddresses@2021-02-01' = {
   location: location
   properties: {
     publicIPAllocationMethod: 'Dynamic'
+    dnsSettings: {
+            "domainNameLabel": "jjcartapi",
+            "fqdn": cartCname + location + ".cloudapp.azure.com"
+        }
   }
 }
 
