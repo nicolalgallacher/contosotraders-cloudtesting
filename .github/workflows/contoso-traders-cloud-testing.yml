@@ -454,21 +454,10 @@ jobs:
         uses: azure/CLI@v1
         with:
           inlineScript: echo UI CDN endpoint accessible at https://$(az keyvault secret show --vault-name ${{ env.KV_NAME }}${{ vars.SUFFIX }} --name uiCdnEndpoint --query value -o tsv)
-      #IIS App Install 
-      #- name: iis app copy
-        #uses: 
-      - task: AzureFileCopy@4
-          inputs:
-          SourcePath: 'src/ContosoTraders.Ui.Website/build'
-          azureSubscription: ${{ secrets.SUBSCRIPTION_NAME}}
-          Destination: 'AzureVMs'
-          storage: ${{ env.UI_STORAGE_ACCOUNT_NAME }}
-          containerName: '$web'
-          resourceGroup: ${{ env.RESOURCE_GROUP_NAME}}
-          MachineNames: 'vmiis-0' #TODO: Change this to TAGS!
-          vmsAdminUserName: 'iisAdmin'
-          vmsAdminPassword: ${{ secrets.IISVMPASSWORD }}
-          TargetPath: 'C:\ReactApp'
+      - name: iis-AppCopy #IIS APP COPY 
+        uses: azure/CLI@1 
+        with: 
+          inlineScript: az storage blob download --account-name ${{ env.UI_STORAGE_ACCOUNT_NAME }} --account-key ${{ secrets.UI_STORAGE_KEY}} --destination '10.0.6.0\c$\ReactApp'
 
   load-tests-with-chaos-products-api:
     needs: [provision, playwright-tests-ui]
