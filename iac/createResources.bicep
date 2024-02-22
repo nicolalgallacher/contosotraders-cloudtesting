@@ -1408,12 +1408,26 @@ module vnetAcaSubnetNsg './modules/createNsg.bicep' = if (deployPrivateEndpoints
     }
 }
 
+// allow ports 80 and 22 for the VMs JM+
 module vnetVmSubnetNsg './modules/createNsg.bicep' = if (deployPrivateEndpoints) {
   name: 'createVmSubnetNsg'
     params: {
       location: resourceLocation
       nsgName: '${vnetVmSubnetName}-nsg-${resourceLocation}'
-      nsgRules: []
+      nsgRules: [
+        {
+           name: 'AllowAnyHTTPInbound'
+           properties: {
+              protocol: 'TCP'
+              sourcePortRange: '*'
+              destinationPortRange: '80'
+              sourceAddressPrefix: '*'
+              destinationAddressPrefix: '*'
+              access: 'Allow'
+              priority: 100
+              direction: 'Inbound'
+           }
+      ]
       resourceTags: resourceTags
     }
 }
