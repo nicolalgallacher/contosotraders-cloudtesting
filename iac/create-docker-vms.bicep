@@ -16,6 +16,7 @@ var prodVmName = 'prodVM'
 resource cartPublicIP 'Microsoft.Network/publicIPAddresses@2021-02-01' = {
   name: 'cartPublicIP'
   location: location
+  tags: resourceTags
   properties: {
     publicIPAllocationMethod: 'Dynamic'
     dnsSettings: {
@@ -28,6 +29,7 @@ resource cartPublicIP 'Microsoft.Network/publicIPAddresses@2021-02-01' = {
 resource cartNIC 'Microsoft.Network/networkInterfaces@2021-02-01' = {
   name: 'cartNIC'
   location: location
+  tags: resourceTags
   properties: {
     ipConfigurations: [
       {
@@ -48,6 +50,7 @@ resource cartNIC 'Microsoft.Network/networkInterfaces@2021-02-01' = {
 resource cartVM 'Microsoft.Compute/virtualMachines@2021-03-01' = {
   name: cartVmName
   location: location
+  tags: resourceTags
   dependsOn: [
     cartNIC
   ]
@@ -93,6 +96,7 @@ resource cartVM_extensionName 'Microsoft.Compute/virtualMachines/extensions@2019
   parent: cartVM
   name: 'DockerExtension'
   location: location
+  tags: resourceTags
   properties: {
     publisher: 'Microsoft.Azure.Extensions'
     type: 'DockerExtension'
@@ -104,6 +108,7 @@ resource cartVM_extensionName 'Microsoft.Compute/virtualMachines/extensions@2019
 resource prodPublicIP 'Microsoft.Network/publicIPAddresses@2021-02-01' = {
   name: 'prodPublicIP'
   location: location
+  tags: resourceTags
   properties: {
     publicIPAllocationMethod: 'Dynamic'
     dnsSettings: {
@@ -116,6 +121,7 @@ resource prodPublicIP 'Microsoft.Network/publicIPAddresses@2021-02-01' = {
 resource prodNIC 'Microsoft.Network/networkInterfaces@2021-02-01' = {
   name: 'prodNIC'
   location: location
+  tags: resourceTags
   properties: {
     ipConfigurations: [
       {
@@ -136,6 +142,7 @@ resource prodNIC 'Microsoft.Network/networkInterfaces@2021-02-01' = {
 resource prodVM 'Microsoft.Compute/virtualMachines@2021-03-01' = {
   name: prodVmName
   location: location
+  tags: resourceTags
   dependsOn: [
     prodNIC
   ]
@@ -181,6 +188,7 @@ resource prodVM_extensionName 'Microsoft.Compute/virtualMachines/extensions@2019
   parent: prodVM
   name: 'DockerExtension'
   location: location
+  tags: resourceTags
   properties: {
     publisher: 'Microsoft.Azure.Extensions'
     type: 'DockerExtension'
