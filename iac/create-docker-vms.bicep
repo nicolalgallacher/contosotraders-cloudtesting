@@ -7,8 +7,8 @@ param subnetId string:
 param cartCname string
 param productCname string
 
-var cartvmName string = 'cartVM'
-var prodvmName string = 'prodVM'
+var cartvmName = 'cartVM'
+var prodvmName = 'prodVM'
  
 
 resource cartPublicIP 'Microsoft.Network/publicIPAddresses@2021-02-01' = {
