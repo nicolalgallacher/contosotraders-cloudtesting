@@ -19,8 +19,8 @@ resource cartPublicIP 'Microsoft.Network/publicIPAddresses@2021-02-01' = {
   properties: {
     publicIPAllocationMethod: 'Dynamic'
     dnsSettings: {
-        domainNameLabel: cartCname + "pip"
-        fqdn: cartCname + location + ".cloudapp.azure.com"
+        domainNameLabel: cartCname + 'pip'
+        fqdn: cartCname
     }
   }
 }
@@ -107,8 +107,8 @@ resource prodPublicIP 'Microsoft.Network/publicIPAddresses@2021-02-01' = {
   properties: {
     publicIPAllocationMethod: 'Dynamic'
     dnsSettings: {
-        domainNameLabel: productCname + "pip"
-        fqdn: productCname + location + ".cloudapp.azure.com"
+        domainNameLabel: productCname + 'pip'
+        fqdn: productCname
     }
   }
 }
