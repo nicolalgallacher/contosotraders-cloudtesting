@@ -1,6 +1,8 @@
 param location string
 param adminUsername string
+@secure()
 param adminPassword string 
+
 param managedIdentityId string
 param subnetId string:
 param cartCname string
