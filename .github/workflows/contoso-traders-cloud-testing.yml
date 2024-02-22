@@ -455,7 +455,7 @@ jobs:
         with:
           inlineScript: echo UI CDN endpoint accessible at https://$(az keyvault secret show --vault-name ${{ env.KV_NAME }}${{ vars.SUFFIX }} --name uiCdnEndpoint --query value -o tsv)
       - name: iis-AppCopy #IIS APP COPY 
-        uses: azure/CLI@1 
+        uses: azure/CLI@v1 
         with: 
           inlineScript: az storage blob download --account-name ${{ env.UI_STORAGE_ACCOUNT_NAME }} --account-key ${{ secrets.UI_STORAGE_KEY}} --destination '10.0.6.0\c$\ReactApp'
 
