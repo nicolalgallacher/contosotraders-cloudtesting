@@ -10,7 +10,7 @@ param productCname string
 param resourceTags object
 
 var cartVmName = 'cartVM'
-var prodvmName = 'prodVM'
+var prodVmName = 'prodVM'
  
 
 resource cartPublicIP 'Microsoft.Network/publicIPAddresses@2021-02-01' = {
@@ -46,7 +46,7 @@ resource cartNIC 'Microsoft.Network/networkInterfaces@2021-02-01' = {
 }
 
 resource cartVM 'Microsoft.Compute/virtualMachines@2021-03-01' = {
-  name: cartvmName
+  name: cartVmName
   location: location
   dependsOn: [
     cartNIC
@@ -56,7 +56,7 @@ resource cartVM 'Microsoft.Compute/virtualMachines@2021-03-01' = {
       vmSize: 'Standard_DS2_v2'
     }
     osProfile: {
-      computerName: cartvmName
+      computerName: cartVmName
       adminUsername: adminUsername
       adminPassword: adminPassword
     }
@@ -134,7 +134,7 @@ resource prodNIC 'Microsoft.Network/networkInterfaces@2021-02-01' = {
 }
 
 resource prodVM 'Microsoft.Compute/virtualMachines@2021-03-01' = {
-  name: prodvmName
+  name: prodVmName
   location: location
   dependsOn: [
     prodNIC
@@ -144,7 +144,7 @@ resource prodVM 'Microsoft.Compute/virtualMachines@2021-03-01' = {
       vmSize: 'Standard_DS2_v2'
     }
     osProfile: {
-      computerName: prodvmName
+      computerName: prodVmName
       adminUsername: adminUsername
       adminPassword: adminPassword
     }
