@@ -1747,7 +1747,6 @@ module dockerVms './create-docker-vms.bicep' = if (deployVmBasedApis) {
   name: 'createDockerVms'
     params: {
       location: resourceLocation
-      resourceTags: resourceTags
       adminUsername: 'localadmin'
       adminPassword: sqlPassword
       managedIdentityId: userassignedmiforkvaccess.id
