@@ -1,5 +1,5 @@
 param location string
-param resourceTags string
+param resourceTags object
 param adminUsername string
 param adminPassword string 
 param managedIdentityId string
