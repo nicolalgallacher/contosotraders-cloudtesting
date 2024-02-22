@@ -155,8 +155,8 @@ var vnetBastionSubnetName = 'AzureBastionSubnet'
 var vnetBastionSubnetAddressPrefix = '10.0.10.0/23'
 
 // VM-based docker APIs (JM+)
-var productApiCname = '${prefixHyphenated}-prodapi${suffix}' + location + '.cloudapp.azure.com'
-var cartApiCname = '${prefixHyphenated}-cartapi${suffix}' + location + '.cloudapp.azure.com'
+var productApiCname = '${prefixHyphenated}-prodapi${suffix}.${location}.cloudapp.azure.com'
+var cartApiCname = '${prefixHyphenated}-cartapi${suffix}.${location}.cloudapp.azure.com'
 
 // bastion
 var bastionHostName = '${prefixHyphenated}-bastion${suffix}'
