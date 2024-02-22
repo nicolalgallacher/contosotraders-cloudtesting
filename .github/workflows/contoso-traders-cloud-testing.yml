@@ -41,6 +41,7 @@ env:
   UI_CDN_ENDPOINT_NAME: contoso-traders-ui2
   UI_STORAGE_ACCOUNT_NAME: contosotradersui2
   USER_ASSIGNED_MANAGED_IDENTITY_NAME: contoso-traders-mi-kv-access
+  # JM+
   PROD_VM: jjprodapi.westeurope.cloudapp.azure.com
   CART_VM: jjcartapi.westeurope.cloudapp.azure.com
   PROD_VM_NAME: prodVM
@@ -152,6 +153,7 @@ jobs:
       # Note: The bicep template outputs are not shown in the logs. You can extract the outputs as shown here:
       # https://github.com/Azure/arm-deploy#another-example-on-how-to-use-this-action-to-get-the-output-of-arm-template
       - name: create resources
+        id: createResources
         uses: Azure/arm-deploy@v1
         with:
           scope: resourcegroup
@@ -235,7 +237,7 @@ jobs:
         with:
           inlineScript: echo "cartsApiEndpoint"="$(az keyvault secret show --vault-name ${{ env.KV_NAME }}${{ vars.SUFFIX }} --name cartsApiEndpoint --query value -o tsv)" >> $GITHUB_OUTPUT
       
-      # add a deploy to the carts VM
+      # add a deploy to the carts VM JM+
       - name: Export variables from secret
         run: |
           ENV_JSON='${{ secrets.SERVICEPRINCIPAL }}'
@@ -262,6 +264,23 @@ jobs:
         run: docker build src -f ./src/ContosoTraders.Api.Products/Dockerfile -t ${{ env.ACR_NAME }}${{ vars.SUFFIX }}.azurecr.io/${{ env.PRODUCTS_ACR_REPOSITORY_NAME }}:latest -t ${{ env.ACR_NAME }}${{ vars.SUFFIX }}.azurecr.io/${{ env.PRODUCTS_ACR_REPOSITORY_NAME }}:${{ github.sha }}
       - name: docker push (to acr)
         run: docker push --all-tags ${{ env.ACR_NAME }}${{ vars.SUFFIX }}.azurecr.io/${{ env.PRODUCTS_ACR_REPOSITORY_NAME }}
+      
+      # JM+ deploy to VM
+      # add a deploy to the products VM
+      - name: Export variables from secret
+        run: |
+          ENV_JSON='${{ secrets.SERVICEPRINCIPAL }}'
+          echo "$ENV_JSON" | jq -r 'to_entries[] | "\(.key)=\(.value)"' >> $GITHUB_ENV
+      - name: Run Docker container on Azure VM
+        uses: Azure/cli@v1.0.9
+        with:
+         azcliversion: 2.0.72
+         inlineScript: |
+          az login --service-principal -u ${{ env.clientId }} -p ${{ env.clientSecret }} --tenant ${{ env.tenantId }}
+          az vm run-command invoke -g ${{ env.RESOURCE_GROUP_NAME }}${{ vars.SUFFIX }} -n ${{ env.PROD_VM_NAME }} --command-id RunShellScript --scripts "docker login --username ${{ env.ACR_NAME }}${{ vars.SUFFIX }} --password ${{ secrets.ACRPASSWORD }} ${{ env.ACR_NAME }}${{ vars.SUFFIX }}.azurecr.io && docker pull ${{ env.ACR_NAME }}${{ vars.SUFFIX }}.azurecr.io/${{ env.CARTS_ACR_REPOSITORY_NAME }}:${{ github.sha }} && docker run -d --restart=always -p 80:80 ${{ env.ACR_NAME }}${{ vars.SUFFIX }}.azurecr.io/${{ env.PROD_ACR_REPOSITORY_NAME }}:${{ github.sha }}"
+        env:
+         AZURE_SUBSCRIPTION_ID: ${{ env.subscriptionId }}
+      
       - name: setup kubectl
         uses: azure/setup-kubectl@v3
       - name: create kubernetes secret (acr password)
@@ -417,12 +436,12 @@ jobs:
           inlineScript: echo "productsApiEndpoint"="$(az keyvault secret show --vault-name ${{ env.KV_NAME }}${{ vars.SUFFIX }} --name productsApiEndpoint --query value -o tsv)" >> $GITHUB_OUTPUT
 
       #
-      # section #4: deploy the ui
+      # section #4: deploy the ui (JM+)
       #
       - name: set REACT_APP_APIURLSHOPPINGCART
-        run: echo "REACT_APP_APIURLSHOPPINGCART"="http://${{ env.CART_VM }}/v1" >> $GITHUB_ENV
+        run: echo "REACT_APP_APIURLSHOPPINGCART"="http://${{ steps.createResources.outputs.cartVmApiEndpoint }}/v1" >> $GITHUB_ENV
       - name: set REACT_APP_APIURL
-        run: echo "REACT_APP_APIURL"="http://${{ env.PROD_VM }}/v1" >> $GITHUB_ENV
+        run: echo "REACT_APP_APIURL"="http://${{ steps.createResources.outputs.productVmApiEndpoint }}/v1" >> $GITHUB_ENV
       - name: set REACT_APP_B2CCLIENTID
         if: ${{ env.AADUSERNAME != '' && env.AADPASSWORD != '' }}
         run: echo "REACT_APP_B2CCLIENTID"="${{ steps.get-azureAdAppClientId.outputs.azureAdAppClientId }}" >> $GITHUB_ENV
