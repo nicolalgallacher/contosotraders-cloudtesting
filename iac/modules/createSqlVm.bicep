@@ -145,7 +145,7 @@ resource networkInterface 'Microsoft.Network/networkInterfaces@2022-01-01' = {
   }
 }
 
-resource virtualMachine 'Microsoft.Compute/virtualMachines@2022-03-01' = {
+resource virtualMachine 'Microsoft.Compute/virtualMachines@2022-03-01' =  {
   name: virtualMachineName
   location: location
   properties: {

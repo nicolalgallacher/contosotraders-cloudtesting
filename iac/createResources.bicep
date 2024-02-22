@@ -562,46 +562,46 @@ resource productsapiappsvc 'Microsoft.Web/sites@2022-03-01' = {
 //
 
 // sql azure server
-resource productsdbsrv 'Microsoft.Sql/servers@2022-05-01-preview' = if (!deploySqlOnIaas) {
-  name: productsDbServerName
-  location: resourceLocation
-  tags: resourceTags
-  properties: {
-    administratorLogin: productsDbServerAdminLogin
-    administratorLoginPassword: productsDbServerAdminPassword
-    publicNetworkAccess: 'Enabled'
-  }
+// resource productsdbsrv 'Microsoft.Sql/servers@2022-05-01-preview' = if (!deploySqlOnIaas) {
+//   name: productsDbServerName
+//   location: resourceLocation
+//   tags: resourceTags
+//   properties: {
+//     administratorLogin: productsDbServerAdminLogin
+//     administratorLoginPassword: productsDbServerAdminPassword
+//     publicNetworkAccess: 'Enabled'
+//   }
 
   // sql azure database
-  resource productsdbsrv_db 'databases' =  {
-    name: productsDbName
-    location: resourceLocation
-    tags: resourceTags
-    sku: {
-      capacity: 5
-      tier: 'Basic'
-      name: 'Basic'
-    }
-  }
+//   resource productsdbsrv_db 'databases' =  {
+//     name: productsDbName
+//     location: resourceLocation
+//     tags: resourceTags
+//     sku: {
+//       capacity: 5
+//       tier: 'Basic'
+//       name: 'Basic'
+//     }
+//   }
 
-  // sql azure firewall rule (allow access from all azure resources/services)
-  resource productsdbsrv_db_fwlallowazureresources 'firewallRules' = {
-    name: 'AllowAllWindowsAzureIps'
-    properties: {
-      endIpAddress: '0.0.0.0'
-      startIpAddress: '0.0.0.0'
-    }
-  }
+//   // sql azure firewall rule (allow access from all azure resources/services)
+//   resource productsdbsrv_db_fwlallowazureresources 'firewallRules' = {
+//     name: 'AllowAllWindowsAzureIps'
+//     properties: {
+//       endIpAddress: '0.0.0.0'
+//       startIpAddress: '0.0.0.0'
+//     }
+//   }
 
-  // @TODO: Hack to enable temporary access to devs during local development/debugging.
-  resource productsdbsrv_db_fwllocaldev 'firewallRules' = {
-    name: 'AllowLocalDevelopment'
-    properties: {
-      endIpAddress: '255.255.255.255'
-      startIpAddress: '0.0.0.0'
-    }
-  }
-}
+//   // @TODO: Hack to enable temporary access to devs during local development/debugging.
+//   resource productsdbsrv_db_fwllocaldev 'firewallRules' = {
+//     name: 'AllowLocalDevelopment'
+//     properties: {
+//       endIpAddress: '255.255.255.255'
+//       startIpAddress: '0.0.0.0'
+//     }
+//   }
+// }
 
 //
 // profiles db
