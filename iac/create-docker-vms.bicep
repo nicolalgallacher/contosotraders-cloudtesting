@@ -9,7 +9,7 @@ param cartCname string
 param productCname string
 param resourceTags object
 
-var cartvmName = 'cartVM'
+var cartCname = 'cartVM'
 var prodvmName = 'prodVM'
  
 
@@ -19,8 +19,8 @@ resource cartPublicIP 'Microsoft.Network/publicIPAddresses@2021-02-01' = {
   properties: {
     publicIPAllocationMethod: 'Dynamic'
     dnsSettings: {
-            "domainNameLabel": "jjcartapi",
-            "fqdn": cartCname + location + ".cloudapp.azure.com"
+            domainNameLabel: cartCname + "pip"
+            fqdn: cartCname + location + ".cloudapp.azure.com"
         }
   }
 }
