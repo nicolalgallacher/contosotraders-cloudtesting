@@ -51,9 +51,6 @@ resource cartVM 'Microsoft.Compute/virtualMachines@2021-03-01' = {
   name: cartVmName
   location: location
   tags: resourceTags
-  dependsOn: [
-    cartNIC
-  ]
   properties: {
     hardwareProfile: {
       vmSize: 'Standard_DS2_v2'
@@ -143,9 +140,6 @@ resource prodVM 'Microsoft.Compute/virtualMachines@2021-03-01' = {
   name: prodVmName
   location: location
   tags: resourceTags
-  dependsOn: [
-    prodNIC
-  ]
   properties: {
     hardwareProfile: {
       vmSize: 'Standard_DS2_v2'
