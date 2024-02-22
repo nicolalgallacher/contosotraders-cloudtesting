@@ -9,7 +9,7 @@ param cartCname string
 param productCname string
 param resourceTags object
 
-var cartVmame = 'cartVM'
+var cartVmName = 'cartVM'
 var prodvmName = 'prodVM'
  
 
