@@ -1416,7 +1416,7 @@ module vnetVmSubnetNsg './modules/createNsg.bicep' = if (deployPrivateEndpoints)
       nsgName: '${vnetVmSubnetName}-nsg-${resourceLocation}'
       nsgRules: [
         {
-           name: 'AllowAnyHTTPInbound'
+           name: 'HTTPInbound'
            protocol: 'TCP'
            sourcePortRange: '*'
            destinationPortRange: '80'
@@ -1425,6 +1425,18 @@ module vnetVmSubnetNsg './modules/createNsg.bicep' = if (deployPrivateEndpoints)
            destinationAddressPrefix: '*'
            access: 'Allow'
            priority: 100
+           direction: 'Inbound'
+        },
+        {
+           name: 'SSHInbound'
+           protocol: 'TCP'
+           sourcePortRange: '*'
+           destinationPortRange: '22'
+           destinationPortRanges: []
+           sourceAddressPrefix: '*'
+           destinationAddressPrefix: '*'
+           access: 'Allow'
+           priority: 110
            direction: 'Inbound'
         }
       ]
