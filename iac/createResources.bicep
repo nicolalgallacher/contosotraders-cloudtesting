@@ -1420,6 +1420,7 @@ module vnetVmSubnetNsg './modules/createNsg.bicep' = if (deployPrivateEndpoints)
            protocol: 'TCP'
            sourcePortRange: '*'
            destinationPortRange: '80'
+           destinationPortRanges: []
            sourceAddressPrefix: '*'
            destinationAddressPrefix: '*'
            access: 'Allow'
