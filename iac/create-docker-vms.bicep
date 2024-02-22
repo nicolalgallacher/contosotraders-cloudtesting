@@ -6,8 +6,9 @@ param managedIdentityId string
 param subnetId string:
 param cartCname string
 param productCname string
-param cartvmName string = 'cartVM'
-param prodvmName string = 'prodVM'
+
+var cartvmName string = 'cartVM'
+var prodvmName string = 'prodVM'
  
 
 resource cartPublicIP 'Microsoft.Network/publicIPAddresses@2021-02-01' = {
