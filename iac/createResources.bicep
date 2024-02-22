@@ -1754,6 +1754,7 @@ module dockerVms './create-docker-vms.bicep' = if (deployVmBasedApis) {
       subnetId: vnet.properties.subnets[1].id
       cartCname: cartApiCname
       productCname: productApiCname
+      resourceTags: resourceTags
     }
 }
 
