@@ -1,11 +1,11 @@
 param location string
-param resourceTags object
 param adminUsername string
 param adminPassword string 
 param managedIdentityId string
 param subnetId string:
 param cartCname string
 param productCname string
+param resourceTags object
 
 var cartvmName = 'cartVM'
 var prodvmName = 'prodVM'
