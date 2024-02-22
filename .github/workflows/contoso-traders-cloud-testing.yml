@@ -455,9 +455,10 @@ jobs:
         with:
           inlineScript: echo UI CDN endpoint accessible at https://$(az keyvault secret show --vault-name ${{ env.KV_NAME }}${{ vars.SUFFIX }} --name uiCdnEndpoint --query value -o tsv)
       #IIS App Install 
-      - name: iis app copy
-        task: AzureFileCopy@4
-        inputs:
+      #- name: iis app copy
+        #uses: 
+      - task: AzureFileCopy@4
+          inputs:
           SourcePath: 'src/ContosoTraders.Ui.Website/build'
           azureSubscription: ${{ secrets.SUBSCRIPTION_NAME}}
           Destination: 'AzureVMs'
