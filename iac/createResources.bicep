@@ -1777,8 +1777,8 @@ module dockerVms './create-docker-vms.bicep' = if (deployVmBasedApis) {
       adminPassword: sqlPassword
       managedIdentityId: userassignedmiforkvaccess.id
       subnetId: vnet.properties.subnets[1].id
-      cartCname: cartApiCname
-      productCname: productApiCname
+      cartCname: '${prefixHyphenated}-cartapi${suffix}'
+      productCname: '${prefixHyphenated}-prodapi${suffix}'
       resourceTags: resourceTags
     }
 }
