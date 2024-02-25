@@ -735,7 +735,7 @@ resource productimagesstgacc 'Microsoft.Storage/storageAccounts@2022-09-01' = {
   }
   kind: 'StorageV2'
   properties: {
-    allowBlobPublicAccess: false
+    allowBlobPublicAccess: true
   }
 
   // blob service
@@ -746,7 +746,7 @@ resource productimagesstgacc 'Microsoft.Storage/storageAccounts@2022-09-01' = {
     resource productimagesstgacc_blobsvc_productdetailscontainer 'containers' = {
       name: productImagesProductDetailsContainerName
       properties: {
-        publicAccess: 'None'
+        publicAccess: 'Container'
       }
     }
 
@@ -754,7 +754,7 @@ resource productimagesstgacc 'Microsoft.Storage/storageAccounts@2022-09-01' = {
     resource productimagesstgacc_blobsvc_productlistcontainer 'containers' = {
       name: productImagesProductListContainerName
       properties: {
-        publicAccess: 'None'
+        publicAccess: 'Container'
       }
     }
   }
