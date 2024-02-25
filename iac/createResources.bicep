@@ -1787,7 +1787,7 @@ module dockerVms './create-docker-vms.bicep' = if (deployVmBasedApis) {
 module newFrontDoor './modules/front-door-standard.bicep' = if (deployVmBasedApis) {
   name: 'createFrontDoorStandard'
     params: {
-      frontdoorname: '${prefixHyphenated}-${suffix}'
+      frontdoorname: '${prefixHyphenated}-fd-${suffix}'
       productapicname: productApiCname
       cartapicname: cartApiCname
       imagescname: '${productImagesStgAccName}.blob.core.windows.net'
