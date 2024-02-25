@@ -1783,6 +1783,19 @@ module dockerVms './create-docker-vms.bicep' = if (deployVmBasedApis) {
     }
 }
 
+//JM+ new front door standard for web, images and APIs
+module newFrontDoor '.modeules/front-door-standard.bicep' = if (deployVmBasedApis) {
+  name: 'createFrontDoorStandard'
+    params: {
+      frontdoorname: '${prefixHyphenated}-${suffix}'
+      productapicname: productApiCname
+      cartapicname: cartApiCname
+      imagescname: '${productImagesStgAccName}.blob.core.windows.net'
+      webstorecname: '${prefixHyphenated}${suffix}.z6.web.core.windows.net'
+      resourceTags: resourceTags
+    }
+}
+
 //
 // chaos studio
 //
