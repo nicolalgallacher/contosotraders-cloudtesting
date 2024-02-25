@@ -5,7 +5,7 @@ param imagescname string
 param webstorecname string
 param resourceTags object
 
-resource profiles_MyFrontDoor_name_resource 'Microsoft.Cdn/profiles@2022-11-01-preview' = {
+resource frontDoorProfile 'Microsoft.Cdn/profiles@2022-11-01-preview' = {
   name: frontdoorname
   location: 'Global'
   tags: resourceTags
@@ -18,11 +18,11 @@ resource profiles_MyFrontDoor_name_resource 'Microsoft.Cdn/profiles@2022-11-01-p
     originResponseTimeoutSeconds: 30
     // Remove the assignment of an empty object to the read-only property "extendedProperties"
     // extendedProperties: {}
-  }  
+  }
 }
 
-resource profiles_MyFrontDoor_name_web 'Microsoft.Cdn/profiles/afdendpoints@2022-11-01-preview' = {
-  parent: profiles_MyFrontDoor_name_resource
+resource frontDoorProfile_web 'Microsoft.Cdn/profiles/afdendpoints@2022-11-01-preview' = {
+  parent: frontDoorProfile 
   name: 'web'
   location: 'Global'
   tags: resourceTags
@@ -31,8 +31,8 @@ resource profiles_MyFrontDoor_name_web 'Microsoft.Cdn/profiles/afdendpoints@2022
   }
 }
 
-resource profiles_MyFrontDoor_name_apis 'Microsoft.Cdn/profiles/afdendpoints@2022-11-01-preview' = {
-  parent: profiles_MyFrontDoor_name_resource
+resource frontDoorProfile_apis 'Microsoft.Cdn/profiles/afdendpoints@2022-11-01-preview' = {
+  parent: frontDoorProfile
   name: 'apis'
   location: 'Global'
   tags: resourceTags
@@ -41,8 +41,8 @@ resource profiles_MyFrontDoor_name_apis 'Microsoft.Cdn/profiles/afdendpoints@202
   }
 }
 
-resource profiles_MyFrontDoor_name_images 'Microsoft.Cdn/profiles/afdendpoints@2022-11-01-preview' = {
-  parent: profiles_MyFrontDoor_name_resource
+resource frontDoorProfile_images 'Microsoft.Cdn/profiles/afdendpoints@2022-11-01-preview' = {
+  parent: frontDoorProfile
   name: 'images'
   location: 'Global'
   tags: resourceTags
@@ -51,8 +51,8 @@ resource profiles_MyFrontDoor_name_images 'Microsoft.Cdn/profiles/afdendpoints@2
   }
 }
 
-resource profiles_MyFrontDoor_name_cartapiorigingroup 'Microsoft.Cdn/profiles/origingroups@2022-11-01-preview' = {
-  parent: profiles_MyFrontDoor_name_resource
+resource frontDoorProfile_cartapiorigingroup 'Microsoft.Cdn/profiles/origingroups@2022-11-01-preview' = {
+  parent: frontDoorProfile
   name: 'cartapiorigingroup'
   properties: {
     loadBalancingSettings: {
@@ -70,8 +70,8 @@ resource profiles_MyFrontDoor_name_cartapiorigingroup 'Microsoft.Cdn/profiles/or
   }
 }
 
-resource profiles_MyFrontDoor_name_imagesgroup 'Microsoft.Cdn/profiles/origingroups@2022-11-01-preview' = {
-  parent: profiles_MyFrontDoor_name_resource
+resource frontDoorProfile_imagesgroup 'Microsoft.Cdn/profiles/origingroups@2022-11-01-preview' = {
+  parent: frontDoorProfile
   name: 'imagesgroup'
   properties: {
     loadBalancingSettings: {
@@ -89,8 +89,8 @@ resource profiles_MyFrontDoor_name_imagesgroup 'Microsoft.Cdn/profiles/origingro
   }
 }
 
-resource profiles_MyFrontDoor_name_MyOriginGroup 'Microsoft.Cdn/profiles/origingroups@2022-11-01-preview' = {
-  parent: profiles_MyFrontDoor_name_resource
+resource frontDoorProfile_webOriginGroup 'Microsoft.Cdn/profiles/origingroups@2022-11-01-preview' = {
+  parent: frontDoorProfile
   name: 'WebOriginGroup'
   properties: {
     loadBalancingSettings: {
@@ -108,8 +108,8 @@ resource profiles_MyFrontDoor_name_MyOriginGroup 'Microsoft.Cdn/profiles/origing
   }
 }
 
-resource profiles_MyFrontDoor_name_prodapiorigingroup 'Microsoft.Cdn/profiles/origingroups@2022-11-01-preview' = {
-  parent: profiles_MyFrontDoor_name_resource
+resource frontDoorProfile_prodapiorigingroup 'Microsoft.Cdn/profiles/origingroups@2022-11-01-preview' = {
+  parent: frontDoorProfile
   name: 'prodApiOriginGroup'
   properties: {
     loadBalancingSettings: {
@@ -127,8 +127,8 @@ resource profiles_MyFrontDoor_name_prodapiorigingroup 'Microsoft.Cdn/profiles/or
   }
 }
 
-resource profiles_MyFrontDoor_name_cartapiorigingroup_cartapiorigin 'Microsoft.Cdn/profiles/origingroups/origins@2022-11-01-preview' = {
-  parent: profiles_MyFrontDoor_name_cartapiorigingroup
+resource frontDoorProfile_cartapiorigin 'Microsoft.Cdn/profiles/origingroups/origins@2022-11-01-preview' = {
+  parent: frontDoorProfile_cartapiorigingroup
   name: 'cartApiOrigin'
   properties: {
     hostName: cartapicname
@@ -142,8 +142,8 @@ resource profiles_MyFrontDoor_name_cartapiorigingroup_cartapiorigin 'Microsoft.C
   }
 }
 
-resource profiles_MyFrontDoor_name_imagesgroup_imagesorigin 'Microsoft.Cdn/profiles/origingroups/origins@2022-11-01-preview' = {
-  parent: profiles_MyFrontDoor_name_imagesgroup
+resource frontDoorProfile_imagesorigin 'Microsoft.Cdn/profiles/origingroups/origins@2022-11-01-preview' = {
+  parent: frontDoorProfile_imagesgroup
   name: 'imagesOrigin'
   properties: {
     hostName: imagescname
@@ -157,8 +157,8 @@ resource profiles_MyFrontDoor_name_imagesgroup_imagesorigin 'Microsoft.Cdn/profi
   }
 }
 
-resource profiles_MyFrontDoor_name_prodapiorigingroup_prodapiorigin 'Microsoft.Cdn/profiles/origingroups/origins@2022-11-01-preview' = {
-  parent: profiles_MyFrontDoor_name_prodapiorigingroup
+resource frontDoorProfile_prodapiorigin 'Microsoft.Cdn/profiles/origingroups/origins@2022-11-01-preview' = {
+  parent: frontDoorProfile_prodapiorigingroup
   name: 'prodApiOrigin'
   properties: {
     hostName: productapicname
@@ -172,8 +172,8 @@ resource profiles_MyFrontDoor_name_prodapiorigingroup_prodapiorigin 'Microsoft.C
   }
 }
 
-resource profiles_MyFrontDoor_name_MyOriginGroup_webstorare 'Microsoft.Cdn/profiles/origingroups/origins@2022-11-01-preview' = {
-  parent: profiles_MyFrontDoor_name_MyOriginGroup
+resource frontDoorProfile_weborigin 'Microsoft.Cdn/profiles/origingroups/origins@2022-11-01-preview' = {
+  parent: frontDoorProfile_webOriginGroup
   name: 'webStoreOriginGroup'
   properties: {
     hostName: webstorecname
@@ -187,13 +187,13 @@ resource profiles_MyFrontDoor_name_MyOriginGroup_webstorare 'Microsoft.Cdn/profi
   }
 }
 
-resource profiles_MyFrontDoor_name_apis_cartroute 'Microsoft.Cdn/profiles/afdendpoints/routes@2022-11-01-preview' = {
-  parent: profiles_MyFrontDoor_name_apis
+resource frontDoorProfile_cart_route 'Microsoft.Cdn/profiles/afdendpoints/routes@2022-11-01-preview' = {
+  parent: frontDoorProfile_apis
   name: 'cartroute'
   properties: {
     customDomains: []
     originGroup: {
-      id: profiles_MyFrontDoor_name_cartapiorigingroup.id
+      id: frontDoorProfile_cartapiorigingroup.id
     }
     ruleSets: []
     supportedProtocols: ['Http', 'Https']
@@ -205,13 +205,13 @@ resource profiles_MyFrontDoor_name_apis_cartroute 'Microsoft.Cdn/profiles/afdend
   }
 }
 
-resource profiles_MyFrontDoor_name_web_MyRoute 'Microsoft.Cdn/profiles/afdendpoints/routes@2022-11-01-preview' = {
-  parent: profiles_MyFrontDoor_name_web
+resource frontDoorProfile_web_route 'Microsoft.Cdn/profiles/afdendpoints/routes@2022-11-01-preview' = {
+  parent: frontDoorProfile_web
   name: 'MyRoute'
   properties: {
     customDomains: []
     originGroup: {
-      id: profiles_MyFrontDoor_name_MyOriginGroup.id
+      id: frontDoorProfile_webOriginGroup.id
     }
     ruleSets: []
     supportedProtocols: ['Http', 'Https']
@@ -223,13 +223,13 @@ resource profiles_MyFrontDoor_name_web_MyRoute 'Microsoft.Cdn/profiles/afdendpoi
   }
 }
 
-resource profiles_MyFrontDoor_name_apis_prodroute 'Microsoft.Cdn/profiles/afdendpoints/routes@2022-11-01-preview' = {
-  parent: profiles_MyFrontDoor_name_apis
+resource frontDoorProfile_apis_prod_route 'Microsoft.Cdn/profiles/afdendpoints/routes@2022-11-01-preview' = {
+  parent: frontDoorProfile_apis
   name: 'prodroute'
   properties: {
     customDomains: []
     originGroup: {
-      id: profiles_MyFrontDoor_name_prodapiorigingroup.id
+      id: frontDoorProfile_prodapiorigingroup.id
     }
     ruleSets: []
     supportedProtocols: ['Http', 'Https']
@@ -241,13 +241,13 @@ resource profiles_MyFrontDoor_name_apis_prodroute 'Microsoft.Cdn/profiles/afdend
   }
 }
 
-resource profiles_MyFrontDoor_name_images_routetoimages 'Microsoft.Cdn/profiles/afdendpoints/routes@2022-11-01-preview' = {
-  parent: profiles_MyFrontDoor_name_images
+resource frontDoorProfile_images_route 'Microsoft.Cdn/profiles/afdendpoints/routes@2022-11-01-preview' = {
+  parent: frontDoorProfile_images
   name: 'routetoimages'
   properties: {
     customDomains: []
     originGroup: {
-      id: profiles_MyFrontDoor_name_imagesgroup.id
+      id: frontDoorProfile_imagesgroup.id
     }
     ruleSets: []
     supportedProtocols: ['Http', 'Https']
@@ -260,6 +260,6 @@ resource profiles_MyFrontDoor_name_images_routetoimages 'Microsoft.Cdn/profiles/
 }
 
 // return the 3 endpoints
-output webEndpoint string = profiles_MyFrontDoor_name_web.properties.hostName
-output imagesEndpoint string = profiles_MyFrontDoor_name_images.properties.hostName
-output VmApiEndpoint string = profiles_MyFrontDoor_name_apis.properties.hostName
+output webEndpoint string = frontDoorProfile_web.properties.hostName
+output imagesEndpoint string = frontDoorProfile_images.properties.hostName
+output VmApiEndpoint string = frontDoorProfile_apis.properties.hostName
