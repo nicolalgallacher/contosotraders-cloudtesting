@@ -1,23 +1,31 @@
-param profiles_MyFrontDoor_name string = 'MyFrontDoor'
+param frontdoorname string = 'MyFrontDoor'
+param productapicname string
+param cartapicname string
+param imagescname string
+param webstorecname string
+param resourceTags object
 
 resource profiles_MyFrontDoor_name_resource 'Microsoft.Cdn/profiles@2022-11-01-preview' = {
-  name: profiles_MyFrontDoor_name
+  name: frontdoorname
   location: 'Global'
+  tags: resourceTags
   sku: {
     name: 'Standard_AzureFrontDoor'
   }
-  kind: 'frontdoor'
+  // Remove the assignment of the value 'frontdoor' to the read-only property "kind"
+  // kind: 'frontdoor'
   properties: {
     originResponseTimeoutSeconds: 30
     // Remove the assignment of an empty object to the read-only property "extendedProperties"
     // extendedProperties: {}
-  }
+  }  
 }
 
-resource profiles_MyFrontDoor_name_afd_a36hikcu3pd7w 'Microsoft.Cdn/profiles/afdendpoints@2022-11-01-preview' = {
+resource profiles_MyFrontDoor_name_web 'Microsoft.Cdn/profiles/afdendpoints@2022-11-01-preview' = {
   parent: profiles_MyFrontDoor_name_resource
-  name: 'afd-a36hikcu3pd7w'
+  name: 'web'
   location: 'Global'
+  tags: resourceTags
   properties: {
     enabledState: 'Enabled'
   }
@@ -27,6 +35,7 @@ resource profiles_MyFrontDoor_name_apis 'Microsoft.Cdn/profiles/afdendpoints@202
   parent: profiles_MyFrontDoor_name_resource
   name: 'apis'
   location: 'Global'
+  tags: resourceTags
   properties: {
     enabledState: 'Enabled'
   }
@@ -36,6 +45,7 @@ resource profiles_MyFrontDoor_name_images 'Microsoft.Cdn/profiles/afdendpoints@2
   parent: profiles_MyFrontDoor_name_resource
   name: 'images'
   location: 'Global'
+  tags: resourceTags
   properties: {
     enabledState: 'Enabled'
   }
@@ -81,7 +91,7 @@ resource profiles_MyFrontDoor_name_imagesgroup 'Microsoft.Cdn/profiles/origingro
 
 resource profiles_MyFrontDoor_name_MyOriginGroup 'Microsoft.Cdn/profiles/origingroups@2022-11-01-preview' = {
   parent: profiles_MyFrontDoor_name_resource
-  name: 'MyOriginGroup'
+  name: 'WebOriginGroup'
   properties: {
     loadBalancingSettings: {
       sampleSize: 4
@@ -100,7 +110,7 @@ resource profiles_MyFrontDoor_name_MyOriginGroup 'Microsoft.Cdn/profiles/origing
 
 resource profiles_MyFrontDoor_name_prodapiorigingroup 'Microsoft.Cdn/profiles/origingroups@2022-11-01-preview' = {
   parent: profiles_MyFrontDoor_name_resource
-  name: 'prodapiorigingroup'
+  name: 'prodApiOriginGroup'
   properties: {
     loadBalancingSettings: {
       sampleSize: 4
@@ -119,12 +129,12 @@ resource profiles_MyFrontDoor_name_prodapiorigingroup 'Microsoft.Cdn/profiles/or
 
 resource profiles_MyFrontDoor_name_cartapiorigingroup_cartapiorigin 'Microsoft.Cdn/profiles/origingroups/origins@2022-11-01-preview' = {
   parent: profiles_MyFrontDoor_name_cartapiorigingroup
-  name: 'cartapiorigin'
+  name: 'cartApiOrigin'
   properties: {
-    hostName: 'contoso-traders-cartapijjjj.westeurope.cloudapp.azure.com'
+    hostName: cartapicname
     httpPort: 80
     httpsPort: 443
-    originHostHeader: 'contoso-traders-cartapijjjj.westeurope.cloudapp.azure.com'
+    originHostHeader: cartapicname
     priority: 1
     weight: 1000
     enabledState: 'Enabled'
@@ -134,12 +144,12 @@ resource profiles_MyFrontDoor_name_cartapiorigingroup_cartapiorigin 'Microsoft.C
 
 resource profiles_MyFrontDoor_name_imagesgroup_imagesorigin 'Microsoft.Cdn/profiles/origingroups/origins@2022-11-01-preview' = {
   parent: profiles_MyFrontDoor_name_imagesgroup
-  name: 'imagesorigin'
+  name: 'imagesOrigin'
   properties: {
-    hostName: 'contosotradersimgjjjj.blob.core.windows.net'
+    hostName: imagescname
     httpPort: 80
     httpsPort: 443
-    originHostHeader: 'contosotradersimgjjjj.blob.core.windows.net'
+    originHostHeader: imagescname
     priority: 1
     weight: 1000
     enabledState: 'Enabled'
@@ -149,12 +159,12 @@ resource profiles_MyFrontDoor_name_imagesgroup_imagesorigin 'Microsoft.Cdn/profi
 
 resource profiles_MyFrontDoor_name_prodapiorigingroup_prodapiorigin 'Microsoft.Cdn/profiles/origingroups/origins@2022-11-01-preview' = {
   parent: profiles_MyFrontDoor_name_prodapiorigingroup
-  name: 'prodapiorigin'
+  name: 'prodApiOrigin'
   properties: {
-    hostName: 'contoso-traders-prodapijjjj.westeurope.cloudapp.azure.com'
+    hostName: productapicname
     httpPort: 80
     httpsPort: 443
-    originHostHeader: 'contoso-traders-prodapijjjj.westeurope.cloudapp.azure.com'
+    originHostHeader: productapicname
     priority: 1
     weight: 1000
     enabledState: 'Enabled'
@@ -164,12 +174,12 @@ resource profiles_MyFrontDoor_name_prodapiorigingroup_prodapiorigin 'Microsoft.C
 
 resource profiles_MyFrontDoor_name_MyOriginGroup_webstorare 'Microsoft.Cdn/profiles/origingroups/origins@2022-11-01-preview' = {
   parent: profiles_MyFrontDoor_name_MyOriginGroup
-  name: 'webstorare'
+  name: 'webStoreOriginGroup'
   properties: {
-    hostName: 'contosotradersui2jjjj.z6.web.core.windows.net'
+    hostName: webstorecname
     httpPort: 80
     httpsPort: 443
-    originHostHeader: 'contosotradersui2jjjj.z6.web.core.windows.net'
+    originHostHeader: webstorecname
     priority: 1
     weight: 1000
     enabledState: 'Enabled'
@@ -195,8 +205,8 @@ resource profiles_MyFrontDoor_name_apis_cartroute 'Microsoft.Cdn/profiles/afdend
   }
 }
 
-resource profiles_MyFrontDoor_name_afd_a36hikcu3pd7w_MyRoute 'Microsoft.Cdn/profiles/afdendpoints/routes@2022-11-01-preview' = {
-  parent: profiles_MyFrontDoor_name_afd_a36hikcu3pd7w
+resource profiles_MyFrontDoor_name_web_MyRoute 'Microsoft.Cdn/profiles/afdendpoints/routes@2022-11-01-preview' = {
+  parent: profiles_MyFrontDoor_name_web
   name: 'MyRoute'
   properties: {
     customDomains: []
@@ -248,3 +258,8 @@ resource profiles_MyFrontDoor_name_images_routetoimages 'Microsoft.Cdn/profiles/
     enabledState: 'Enabled'
   }
 }
+
+// return the 3 endpoints
+output webEndpoint string = profiles_MyFrontDoor_name_web.properties.hostName
+output imagesEndpoint string = profiles_MyFrontDoor_name_images.properties.hostName
+output VmApiEndpoint string = profiles_MyFrontDoor_name_apis.properties.hostName
