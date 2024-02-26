@@ -159,8 +159,8 @@ var productApiCname = '${prefixHyphenated}-prodapi${suffix}.${resourceLocation}.
 var cartApiCname = '${prefixHyphenated}-cartapi${suffix}.${resourceLocation}.cloudapp.azure.com'
 
 // front door standard (JM+)
-var imagesCname: '${productImagesStgAccName}.blob.core.windows.net'
-var webStoreCname: '${prefixHyphenated}${suffix}.z6.web.core.windows.net'
+var imagesCname = '${productImagesStgAccName}.blob.core.windows.net'
+var webStoreCname = '${prefixHyphenated}${suffix}.z6.web.core.windows.net'
 
 // bastion
 var bastionHostName = '${prefixHyphenated}-bastion${suffix}'
