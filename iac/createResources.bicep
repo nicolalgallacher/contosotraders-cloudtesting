@@ -158,6 +158,10 @@ var vnetBastionSubnetAddressPrefix = '10.0.10.0/23'
 var productApiCname = '${prefixHyphenated}-prodapi${suffix}.${resourceLocation}.cloudapp.azure.com'
 var cartApiCname = '${prefixHyphenated}-cartapi${suffix}.${resourceLocation}.cloudapp.azure.com'
 
+// front door standard (JM+)
+var imagesCname: '${productImagesStgAccName}.blob.core.windows.net'
+var webStoreCname: '${prefixHyphenated}${suffix}.z6.web.core.windows.net'
+
 // bastion
 var bastionHostName = '${prefixHyphenated}-bastion${suffix}'
 
@@ -1790,8 +1794,8 @@ module newFrontDoor './modules/front-door-standard.bicep' = if (deployVmBasedApi
       frontdoorname: '${prefixHyphenated}-fd-${suffix}'
       productapicname: productApiCname
       cartapicname: cartApiCname
-      imagescname: '${productImagesStgAccName}.blob.core.windows.net'
-      webstorecname: '${prefixHyphenated}${suffix}.z6.web.core.windows.net'
+      imagescname: imagesCname
+      webstorecname: webStoreCname
       resourceTags: resourceTags
     }
 }
