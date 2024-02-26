@@ -1794,8 +1794,8 @@ module newFrontDoor './modules/front-door-standard.bicep' = if (deployVmBasedApi
       frontdoorname: '${prefixHyphenated}-fd-${suffix}'
       productapicname: productApiCname
       cartapicname: cartApiCname
-      imagescname: productimagesstgacc.properties.primaryEndpoints.blob
-      webstorecname: ui2stgacc.properties.primaryEndpoints.web
+      imagescname: split(productimagesstgacc.properties.primaryEndpoints.blob, '/')[2]
+      webstorecname: split(ui2stgacc.properties.primaryEndpoints.web, '/')[2]
       resourceTags: resourceTags
     }
 }
