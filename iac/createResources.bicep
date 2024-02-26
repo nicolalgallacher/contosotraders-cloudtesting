@@ -1935,4 +1935,5 @@ output cartVmApiEndpoint string = cartApiCname
 // from FD module
 output newFdWebEndpoint string = newFrontDoor.outputs.webEndpoint 
 output newFdimagesEndpoint string = newFrontDoor.outputs.imagesEndpoint 
-output newFdVmApiEndpoint string = newFrontDoor.outputs.VmApiEndpoint 
+output newFdProdVmApiEndpoint string = newFrontDoor.outputs.VmProdApiEndpoint 
+output newFdCartVmApiEndpoint string = newFrontDoor.outputs.VmCartApiEndpoint 
