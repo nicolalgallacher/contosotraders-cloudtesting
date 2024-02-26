@@ -21,7 +21,9 @@ resource frontDoorProfile 'Microsoft.Cdn/profiles@2022-11-01-preview' = {
   }
 }
 
-// now the endpoints - there are  of these
+// now the endpoints - there are 4 of these
+
+// web
 resource frontDoorProfile_web 'Microsoft.Cdn/profiles/afdendpoints@2022-11-01-preview' = {
   parent: frontDoorProfile 
   name: 'webendpoint'
@@ -32,9 +34,10 @@ resource frontDoorProfile_web 'Microsoft.Cdn/profiles/afdendpoints@2022-11-01-pr
   }
 }
 
-resource frontDoorProfile_apis 'Microsoft.Cdn/profiles/afdendpoints@2022-11-01-preview' = {
+// product API
+resource frontDoorProfile_prodapi 'Microsoft.Cdn/profiles/afdendpoints@2022-11-01-preview' = {
   parent: frontDoorProfile
-  name: 'apiendpoint'
+  name: 'prodapiendpoint'
   location: 'Global'
   tags: resourceTags
   properties: {
@@ -42,6 +45,18 @@ resource frontDoorProfile_apis 'Microsoft.Cdn/profiles/afdendpoints@2022-11-01-p
   }
 }
 
+// cart API
+resource frontDoorProfile_cartapi 'Microsoft.Cdn/profiles/afdendpoints@2022-11-01-preview' = {
+  parent: frontDoorProfile
+  name: 'cartapiendpoint'
+  location: 'Global'
+  tags: resourceTags
+  properties: {
+    enabledState: 'Enabled'
+  }
+}
+
+// images
 resource frontDoorProfile_images 'Microsoft.Cdn/profiles/afdendpoints@2022-11-01-preview' = {
   parent: frontDoorProfile
   name: 'imagesendpoint'
@@ -52,7 +67,61 @@ resource frontDoorProfile_images 'Microsoft.Cdn/profiles/afdendpoints@2022-11-01
   }
 }
 
-// cart api orging group, origin and route
+//prod api origin group, origin and route
+resource frontDoorProfile_prodapiorigingroup 'Microsoft.Cdn/profiles/origingroups@2022-11-01-preview' = {
+  parent: frontDoorProfile
+  name: 'prodApiOriginGroup'
+  properties: {
+    loadBalancingSettings: {
+      sampleSize: 4
+      successfulSamplesRequired: 3
+      additionalLatencyInMilliseconds: 50
+    }
+    healthProbeSettings: {
+      probePath: '/'
+      probeRequestType: 'HEAD'
+      probeProtocol: 'Http'
+      probeIntervalInSeconds: 100
+    }
+    sessionAffinityState: 'Disabled'
+  }
+}
+
+resource frontDoorProfile_prodapiorigin 'Microsoft.Cdn/profiles/origingroups/origins@2022-11-01-preview' = {
+  parent: frontDoorProfile_prodapiorigingroup
+  name: 'prodApiOrigin'
+  properties: {
+    hostName: productapicname
+    httpPort: 80
+    httpsPort: 443
+    originHostHeader: productapicname
+    priority: 1
+    weight: 1000
+    enabledState: 'Enabled'
+    enforceCertificateNameCheck: false
+  }
+}
+
+resource frontDoorProfile_apis_prod_route 'Microsoft.Cdn/profiles/afdendpoints/routes@2022-11-01-preview' = {
+  parent: frontDoorProfile_prodapi
+  name: 'prodroute'
+  properties: {
+    customDomains: []
+    originGroup: {
+      id: frontDoorProfile_prodapiorigingroup.id
+    }
+    ruleSets: []
+    supportedProtocols: ['Http', 'Https']
+    patternsToMatch: ['/*']
+    forwardingProtocol: 'HttpOnly'
+    linkToDefaultDomain: 'Enabled'
+    httpsRedirect: 'Disabled'
+    enabledState: 'Enabled'
+  }
+}
+// end prod api
+
+// cart api origin group, origin and route
 resource frontDoorProfile_cartapiorigingroup 'Microsoft.Cdn/profiles/origingroups@2022-11-01-preview' = {
   parent: frontDoorProfile
   name: 'cartapiorigingroup'
@@ -88,7 +157,7 @@ resource frontDoorProfile_cartapiorigin 'Microsoft.Cdn/profiles/origingroups/ori
 }
 
 resource frontDoorProfile_cart_route 'Microsoft.Cdn/profiles/afdendpoints/routes@2022-11-01-preview' = {
-  parent: frontDoorProfile_apis
+  parent: frontDoorProfile_cartapi
   name: 'cartroute'
   properties: {
     customDomains: []
@@ -97,7 +166,7 @@ resource frontDoorProfile_cart_route 'Microsoft.Cdn/profiles/afdendpoints/routes
     }
     ruleSets: []
     supportedProtocols: ['Http', 'Https']
-    patternsToMatch: ['/cart/*']
+    patternsToMatch: ['/*']
     forwardingProtocol: 'HttpOnly'
     linkToDefaultDomain: 'Enabled'
     httpsRedirect: 'Enabled'
@@ -105,7 +174,7 @@ resource frontDoorProfile_cart_route 'Microsoft.Cdn/profiles/afdendpoints/routes
   }
 }
 
-// images, web and prod api origin groups, origins and routes
+// images origin groups, origins and routes
 resource frontDoorProfile_imagesgroup 'Microsoft.Cdn/profiles/origingroups@2022-11-01-preview' = {
   parent: frontDoorProfile
   name: 'imagesorigingroup'
@@ -212,61 +281,9 @@ resource frontDoorProfile_web_route 'Microsoft.Cdn/profiles/afdendpoints/routes@
 }
 // end web
 
-//prod api origin group, origin and route
-resource frontDoorProfile_prodapiorigingroup 'Microsoft.Cdn/profiles/origingroups@2022-11-01-preview' = {
-  parent: frontDoorProfile
-  name: 'prodApiOriginGroup'
-  properties: {
-    loadBalancingSettings: {
-      sampleSize: 4
-      successfulSamplesRequired: 3
-      additionalLatencyInMilliseconds: 50
-    }
-    healthProbeSettings: {
-      probePath: '/'
-      probeRequestType: 'HEAD'
-      probeProtocol: 'Http'
-      probeIntervalInSeconds: 100
-    }
-    sessionAffinityState: 'Disabled'
-  }
-}
 
-resource frontDoorProfile_prodapiorigin 'Microsoft.Cdn/profiles/origingroups/origins@2022-11-01-preview' = {
-  parent: frontDoorProfile_prodapiorigingroup
-  name: 'prodApiOrigin'
-  properties: {
-    hostName: productapicname
-    httpPort: 80
-    httpsPort: 443
-    originHostHeader: productapicname
-    priority: 1
-    weight: 1000
-    enabledState: 'Enabled'
-    enforceCertificateNameCheck: false
-  }
-}
-
-resource frontDoorProfile_apis_prod_route 'Microsoft.Cdn/profiles/afdendpoints/routes@2022-11-01-preview' = {
-  parent: frontDoorProfile_apis
-  name: 'prodroute'
-  properties: {
-    customDomains: []
-    originGroup: {
-      id: frontDoorProfile_prodapiorigingroup.id
-    }
-    ruleSets: []
-    supportedProtocols: ['Http', 'Https']
-    patternsToMatch: ['/prod/*']
-    forwardingProtocol: 'HttpOnly'
-    linkToDefaultDomain: 'Enabled'
-    httpsRedirect: 'Disabled'
-    enabledState: 'Enabled'
-  }
-}
-// end prod api
-
-// return the 3 endpoints
+// return the 4 endpoints to the calling createResources (these will need sending updwards to the GH Action
 output webEndpoint string = frontDoorProfile_web.properties.hostName
 output imagesEndpoint string = frontDoorProfile_images.properties.hostName
-output VmApiEndpoint string = frontDoorProfile_apis.properties.hostName
+output VmProdApiEndpoint string = frontDoorProfile_prodapi.properties.hostName
+output VmCartApiEndpoint string = frontDoorProfile_cartapi.properties.hostName
