@@ -443,10 +443,10 @@ jobs:
       #
       - name: set REACT_APP_APIURLSHOPPINGCART
       #  run: echo "REACT_APP_APIURLSHOPPINGCART"="http://${{ steps.createResources.outputs.cartVmApiEndpoint }}/v1" >> $GITHUB_ENV
-        run: echo "REACT_APP_APIURLSHOPPINGCART"= '${VmApiEndpoint}/cart/v1' >> $GITHUB_ENV
+        run: echo "REACT_APP_APIURLSHOPPINGCART"= '${{ steps.createResources.outputs.VmApiEndpoint }}/cart/v1' >> $GITHUB_ENV
       - name: set REACT_APP_APIURL
       #  run: echo "REACT_APP_APIURL"="http://${{ steps.createResources.outputs.productVmApiEndpoint }}/v1" >> $GITHUB_ENV
-        run: echo "REACT_APP_APIURL"="${VmApiEndpoint}/prod/v1" >> $GITHUB_ENV
+        run: echo "REACT_APP_APIURL"= '${{ steps.createResources.outputs.VmApiEndpoint }}/prod/v1' >> $GITHUB_ENV
       - name: set REACT_APP_B2CCLIENTID
         if: ${{ env.AADUSERNAME != '' && env.AADPASSWORD != '' }}
         run: echo "REACT_APP_B2CCLIENTID"="${{ steps.get-azureAdAppClientId.outputs.azureAdAppClientId }}" >> $GITHUB_ENV
