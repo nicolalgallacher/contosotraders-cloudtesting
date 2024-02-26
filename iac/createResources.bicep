@@ -1931,3 +1931,8 @@ output uiCdnEndpoint string = 'https://${cdnprofile_ui2endpoint.properties.hostN
 // JM+
 output productVmApiEndpoint string = productApiCname
 output cartVmApiEndpoint string = cartApiCname
+
+// from FD module
+output newFdWebEndpoint string = newFrontDoor.outputs.webEndpoint 
+output newFdimagesEndpoint string = newFrontDoor.outputs.imagesEndpoint 
+output newFdVmApiEndpoint string = newFrontDoor.outputs.VmApiEndpoint 
