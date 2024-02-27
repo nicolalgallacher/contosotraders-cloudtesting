@@ -158,8 +158,8 @@ var vnetBastionSubnetAddressPrefix = '10.0.10.0/23'
 var productApiCname = '${prefixHyphenated}-prodapi${suffix}.${resourceLocation}.cloudapp.azure.com'
 var cartApiCname = '${prefixHyphenated}-cartapi${suffix}.${resourceLocation}.cloudapp.azure.com'
 
-// front door standard (JM+)
-//var imagesCname = '${productImagesStgAccName}.blob.core.windows.net'
+// front door standard (JM+) images now web exposed
+//var imagesCname = '${productImagesStgAccName}.z6.web.core.windows.net'
 //var webStoreCname = '${prefixHyphenated}${suffix}.z6.web.core.windows.net'
 
 // bastion
@@ -729,7 +729,7 @@ resource cartsapiaca 'Microsoft.App/containerApps@2022-06-01-preview' = {
 // product images
 //
 
-// storage account (product images)
+// storage account (product images) - JM web exposed
 resource productimagesstgacc 'Microsoft.Storage/storageAccounts@2022-09-01' = {
   name: productImagesStgAccName
   location: resourceLocation
@@ -739,7 +739,7 @@ resource productimagesstgacc 'Microsoft.Storage/storageAccounts@2022-09-01' = {
   }
   kind: 'StorageV2'
   properties: {
-    allowBlobPublicAccess: true
+    allowBlobPublicAccess: false
   }
 
   // blob service
@@ -1794,7 +1794,7 @@ module newFrontDoor './modules/front-door-standard.bicep' = if (deployVmBasedApi
       frontdoorname: '${prefixHyphenated}-fd-${suffix}'
       productapicname: productApiCname
       cartapicname: cartApiCname
-      imagescname: split(productimagesstgacc.properties.primaryEndpoints.blob, '/')[2]
+      imagescname: split(productimagesstgacc.properties.primaryEndpoints.web, '/')[2]
       webstorecname: split(ui2stgacc.properties.primaryEndpoints.web, '/')[2]
       resourceTags: resourceTags
     }
