@@ -246,10 +246,12 @@ jobs:
       
       # add a deploy to the carts VM JM+
       - name: Export variables from secret
+        if: ${{ vars.DEPLOYVMBASEDAPIS == 'true' }}
         run: |
           ENV_JSON='${{ secrets.SERVICEPRINCIPAL }}'
           echo "$ENV_JSON" | jq -r 'to_entries[] | "\(.key)=\(.value)"' >> $GITHUB_ENV
       - name: Run Docker container on Azure VM
+        if: ${{ vars.DEPLOYVMBASEDAPIS == 'true' }}
         uses: Azure/cli@v1.0.9
         with:
          azcliversion: 2.0.72
@@ -275,10 +277,12 @@ jobs:
       # JM+ deploy to VM
       # add a deploy to the products VM
       - name: Export variables from secret
+        if: ${{ vars.DEPLOYVMBASEDAPIS == 'true' }}
         run: |
           ENV_JSON='${{ secrets.SERVICEPRINCIPAL }}'
           echo "$ENV_JSON" | jq -r 'to_entries[] | "\(.key)=\(.value)"' >> $GITHUB_ENV
       - name: Run Docker container on Azure VM
+        if: ${{ vars.DEPLOYVMBASEDAPIS == 'true' }}
         uses: Azure/cli@v1.0.9
         with:
          azcliversion: 2.0.72
@@ -441,12 +445,19 @@ jobs:
       #
       # section #4: deploy the ui (JM+)
       #
-      - name: set REACT_APP_APIURLSHOPPINGCART
-      #  run: echo "REACT_APP_APIURLSHOPPINGCART"="http://${{ steps.createResources.outputs.cartVmApiEndpoint }}/v1" >> $GITHUB_ENV
+      - name: set REACT_APP_APIURLSHOPPINGCART_VM
+        if: ${{ vars.DEPLOYVMBASEDAPIS == 'true' }}
         run: echo "REACT_APP_APIURLSHOPPINGCART"= 'https://${{ steps.createResources.outputs.newFdCartVmApiEndpoint   }}/v1' >> $GITHUB_ENV
-      - name: set REACT_APP_APIURL
-      #  run: echo "REACT_APP_APIURL"="http://${{ steps.createResources.outputs.productVmApiEndpoint }}/v1" >> $GITHUB_ENV
+      - name: set REACT_APP_APIURLSHOPPINGCART
+        if: ${{ vars.DEPLOYVMBASEDAPIS != 'true' }}
+        run: echo "REACT_APP_APIURLSHOPPINGCART"="http://${{ steps.createResources.outputs.cartVmApiEndpoint }}/v1" >> $GITHUB_ENV
+      - name: set REACT_APP_APIURL_VM
+        if: ${{ vars.DEPLOYVMBASEDAPIS == 'true' }}
         run: echo "REACT_APP_APIURL"= 'https://${{ steps.createResources.outputs.newFdProdVmApiEndpoint  }}/v1' >> $GITHUB_ENV
+      - name: set REACT_APP_APIURL
+        if: ${{ vars.DEPLOYVMBASEDAPIS != 'true' }}
+        run: echo "REACT_APP_APIURL"="http://${{ steps.createResources.outputs.productVmApiEndpoint }}/v1" >> $GITHUB_ENV
+        
       - name: set REACT_APP_B2CCLIENTID
         if: ${{ env.AADUSERNAME != '' && env.AADPASSWORD != '' }}
         run: echo "REACT_APP_B2CCLIENTID"="${{ steps.get-azureAdAppClientId.outputs.azureAdAppClientId }}" >> $GITHUB_ENV
