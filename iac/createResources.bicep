@@ -919,6 +919,44 @@ resource deploymentScript2 'Microsoft.Resources/deploymentScripts@2020-10-01' = 
   }
 }
 
+// web enable images storage account to bypass shared blob issues JM+
+resource productimagesstgacc_mi 'Microsoft.ManagedIdentity/userAssignedIdentities@2022-01-31-preview' = {
+  name: 'DeploymentScript3'
+  location: resourceLocation
+  tags: resourceTags
+}
+
+resource deploymentScript3 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
+  name: 'DeploymentScript3'
+  location: resourceLocation
+  kind: 'AzurePowerShell'
+  identity: {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${productimagesstgacc_mi.id}': {}
+    }
+  }
+  dependsOn: [
+    // we need to ensure we wait for the role assignment to be deployed before trying to access the storage account
+    roleAssignment
+  ]
+  properties: {
+    azPowerShellVersion: '3.0'
+    scriptContent: loadTextContent('./scripts/enable-static-website.ps1')
+    retentionInterval: 'PT4H'
+    environmentVariables: [
+      {
+        name: 'ResourceGroupName'
+        value: resourceGroup().name
+      }
+      {
+        name: 'StorageAccountName'
+        value: productimagesstgacc.name
+      }
+    ]
+  }
+}
+
 //
 // image classifier
 //
