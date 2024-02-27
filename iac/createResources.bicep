@@ -728,7 +728,8 @@ resource cartsapiaca 'Microsoft.App/containerApps@2022-06-01-preview' = {
 //
 // product images
 //
-
+// JM removed containers as I hope will go in $web
+//
 // storage account (product images) - JM web exposed
 resource productimagesstgacc 'Microsoft.Storage/storageAccounts@2022-09-01' = {
   name: productImagesStgAccName
@@ -745,22 +746,6 @@ resource productimagesstgacc 'Microsoft.Storage/storageAccounts@2022-09-01' = {
   // blob service
   resource productimagesstgacc_blobsvc 'blobServices' = {
     name: 'default'
-
-    // container
-    resource productimagesstgacc_blobsvc_productdetailscontainer 'containers' = {
-      name: productImagesProductDetailsContainerName
-      properties: {
-        publicAccess: 'Container'
-      }
-    }
-
-    // container
-    resource productimagesstgacc_blobsvc_productlistcontainer 'containers' = {
-      name: productImagesProductListContainerName
-      properties: {
-        publicAccess: 'Container'
-      }
-    }
   }
 }
 
