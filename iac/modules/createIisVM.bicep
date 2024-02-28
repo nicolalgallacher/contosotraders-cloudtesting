@@ -105,9 +105,9 @@ resource loadBalancer 'Microsoft.Network/loadBalancers@2021-05-01' = {
       }
     ]
   }
-  dependsOn: [
-    publicIP
-  ]
+  //dependsOn: [
+    //publicIP
+  //]
 }
 
 
