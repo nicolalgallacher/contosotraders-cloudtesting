@@ -1648,7 +1648,7 @@ resource jumpboxvm 'Microsoft.Compute/virtualMachines@2022-08-01' = if (deployPr
       osDisk: {
         createOption: 'FromImage'
         managedDisk: {
-          storageAccountType: 'StandardSSD_LRS'
+          storageAccountType: 'Standard_LRS'
         }
       }
       imageReference: {
