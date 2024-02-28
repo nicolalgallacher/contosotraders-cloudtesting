@@ -1597,9 +1597,19 @@ module iisVMs './modules/createIisVM.bicep' = { //TODO: Add Feature Flag
     exsistingVirtualNetworkName: vnetName 
     exsitingVNetResourceGroup: resourceGroup().name
   }
-  
+}
 
+//FrontDoor
+
+module frontDoor 'modules/createFrontDoor.bicep' = {
+  name: 'createFrontDoor'
+  params: {
+     backendAddress: iisVMs.outputs.internalLbPrivateIPAddress
   }
+  dependsOn: [
+     iisVMs
+  ]
+}
 
 //
 // jumpbox vm

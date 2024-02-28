@@ -429,7 +429,7 @@ jobs:
         working-directory: src/ContosoTraders.Ui.Website
       - name: deploy ui to storage
         uses: azure/CLI@v1
-        with:
+        with: #move IIS copy to here 
           inlineScript: az storage blob sync --account-name '${{ env.UI_STORAGE_ACCOUNT_NAME }}${{ vars.SUFFIX }}' -c '$web' -s 'src/ContosoTraders.Ui.Website/build'
       - name: purge ui cdn endpoint
         uses: azure/CLI@v1
@@ -457,7 +457,7 @@ jobs:
       - name: iis-AppCopy #IIS APP COPY 
         uses: azure/CLI@v1 
         with: 
-          inlineScript: az storage blob download --account-name ${{ env.UI_STORAGE_ACCOUNT_NAME }} --account-key ${{ secrets.UI_STORAGE_KEY}} --destination '10.0.6.0\c$\ReactApp'
+          inlineScript: az storage blob download --account-name ${{ env.UI_STORAGE_ACCOUNT_NAME }} --account-key ${{ secrets.UI_STORAGE_KEY}} --destination '10.0.6.4\c$\ReactApp'
 
   load-tests-with-chaos-products-api:
     needs: [provision, playwright-tests-ui]
