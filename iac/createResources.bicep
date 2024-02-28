@@ -1601,15 +1601,15 @@ module iisVMs './modules/createIisVM.bicep' = { //TODO: Add Feature Flag
 
 //FrontDoor
 
-module frontDoor 'modules/createFrontDoor.bicep' = {
-  name: 'createFrontDoor'
-  params: {
-     backendAddress: iisVMs.outputs.internalLbPrivateIPAddress
-  }
-  dependsOn: [
-     iisVMs
-  ]
-}
+// module frontDoor 'modules/createFrontDoor.bicep' = {
+//   name: 'createFrontDoor'
+//   params: {
+//      backendAddress: iisVMs.outputs.internalLbPrivateIPAddress
+//   }
+//   dependsOn: [
+//      iisVMs
+//   ]
+// }
 
 //
 // jumpbox vm
