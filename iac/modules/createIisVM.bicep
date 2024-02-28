@@ -62,7 +62,7 @@ resource loadBalancer 'Microsoft.Network/loadBalancers@2021-05-01' = {
       {
         name: 'LoadBalancerFrontend'
         properties: {
-          privateIPAddress: publicIP.properties.ipAddress
+          publicIPAddress: publicIP
         }
       }
     ]
