@@ -49,7 +49,6 @@ resource publicIP 'Microsoft.Network/publicIPAddresses@2021-08-01' = {
     publicIPAddressVersion: 'IPv4'
     }
   }
-}
 
 //Internal Load Balancer Setup 
 resource loadBalancer 'Microsoft.Network/loadBalancers@2021-05-01' = {
