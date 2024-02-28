@@ -37,90 +37,6 @@ var loadBalancerName = 'iisInternalLb'
 
 var subnetRef = resourceId(exsitingVNetResourceGroup, 'Microsoft.Network/virtualNetWorks/subnets', exsistingVirtualNetworkName, exsistingSubnetName)
 
-@batchSize(1)
-resource vmNic 'Microsoft.Network/networkInterfaces@2021-08-01' = [for i in range(0,count): {
-  name: '${vmNicName}-${i}'
-  location: location
-  properties: {
-    ipConfigurations: [
-       {
-        name: '${vmNicName}-${i}IPconfig'
-         properties: {
-          privateIPAllocationMethod: 'Dynamic'
-          privateIPAddressVersion: 'IPv4'
-          subnet: {
-             id: subnetRef
-          }
-          //I feel this should be changed out into an if statement to make it more resusable
-          loadBalancerBackendAddressPools: [
-             {
-               id: resourceId('Microsoft.Network/loadBalancers/backendAddressPools', loadBalancerName, 'BackendPool1')
-             }
-          ]
-        }
-       }
-    ]
-  }
-}]
-
-
-@batchSize(1)
-resource virtualMachine 'Microsoft.Compute/virtualMachines@2022-03-01' = [for i in range(0,count): {
-  name: '${vmName}-${i}'
-  location: location 
-  properties: {
-    hardwareProfile: {
-      vmSize: vmSize
-    } 
-    storageProfile: {
-      imageReference: {
-        publisher: imagePublisher
-        offer: imageOffer
-        sku: imageSku
-        version: 'latest'
-      }
-      osDisk: {
-        createOption: 'FromImage'
-       }
-    }
-    networkProfile: {
-      networkInterfaces: [
-        {
-          id: resourceId('Microsoft.Network/networkInterfaces', '${vmNicName}-${i}')
-        }
-      ]
-    }
-    osProfile: {
-      computerName: vmName
-      adminPassword: adminPassword
-      adminUsername: adminUsername
-    }
-  }
-  dependsOn: [
-    vmNic
-  ]
-}]
-
-
-@batchSize(1)
-resource InstallWebServer 'Microsoft.Compute/virtualMachines/extensions@2021-11-01' = [for i in range(0, count): {
-  name: '${vmName}-${i}/InstallWebServer'
-  location: location
-  properties: {
-    publisher: 'Microsoft.Compute'
-    type: 'CustomScriptExtension'
-    typeHandlerVersion: '1.7'
-    autoUpgradeMinorVersion: true
-    settings: {
-      commandToExecute: 'powershell.exe Install-WindowsFeature -name Web-Server -IncludeManagementTools && powershell.exe remove-item \'C:\\inetpub\\wwwroot\\iisstart.htm\' && powershell.exe Add-Content -Path \'C:\\inetpub\\wwwroot\\iisstart.htm\' -Value $(\'Hello World from \' + $env:computername)'
-    }
-  }
-  dependsOn: [
-    virtualMachine
-    vmNic
-  ]
-}]
-
 
 //Internal Load Balancer Setup 
 resource loadBalancer 'Microsoft.Network/loadBalancers@2021-05-01' = {
@@ -181,6 +97,94 @@ resource loadBalancer 'Microsoft.Network/loadBalancers@2021-05-01' = {
   dependsOn: [
   ]
 }
+
+
+@batchSize(1)
+resource vmNic 'Microsoft.Network/networkInterfaces@2021-08-01' = [for i in range(0,count): {
+  name: '${vmNicName}-${i}'
+  location: location
+  properties: {
+    ipConfigurations: [
+       {
+        name: '${vmNicName}-${i}IPconfig'
+         properties: {
+          privateIPAllocationMethod: 'Dynamic'
+          privateIPAddressVersion: 'IPv4'
+          subnet: {
+             id: subnetRef
+          }
+          //I feel this should be changed out into an if statement to make it more resusable
+          loadBalancerBackendAddressPools: [
+             {
+               id: resourceId('Microsoft.Network/loadBalancers/backendAddressPools', loadBalancerName, 'BackendPool1')
+             }
+          ]
+        }
+       }
+    ]
+  }
+  dependsOn: [
+     loadBalancer
+  ]
+}]
+
+
+@batchSize(1)
+resource virtualMachine 'Microsoft.Compute/virtualMachines@2022-03-01' = [for i in range(0,count): {
+  name: '${vmName}-${i}'
+  location: location 
+  properties: {
+    hardwareProfile: {
+      vmSize: vmSize
+    } 
+    storageProfile: {
+      imageReference: {
+        publisher: imagePublisher
+        offer: imageOffer
+        sku: imageSku
+        version: 'latest'
+      }
+      osDisk: {
+        createOption: 'FromImage'
+       }
+    }
+    networkProfile: {
+      networkInterfaces: [
+        {
+          id: resourceId('Microsoft.Network/networkInterfaces', '${vmNicName}-${i}')
+        }
+      ]
+    }
+    osProfile: {
+      computerName: vmName
+      adminPassword: adminPassword
+      adminUsername: adminUsername
+    }
+  }
+  dependsOn: [
+    vmNic
+  ]
+}]
+
+@batchSize(1)
+resource InstallWebServer 'Microsoft.Compute/virtualMachines/extensions@2021-11-01' = [for i in range(0, count): {
+  name: '${vmName}-${i}/InstallWebServer'
+  location: location
+  properties: {
+    publisher: 'Microsoft.Compute'
+    type: 'CustomScriptExtension'
+    typeHandlerVersion: '1.7'
+    autoUpgradeMinorVersion: true
+    settings: {
+      commandToExecute: 'powershell.exe Install-WindowsFeature -name Web-Server -IncludeManagementTools && powershell.exe remove-item \'C:\\inetpub\\wwwroot\\iisstart.htm\' && powershell.exe Add-Content -Path \'C:\\inetpub\\wwwroot\\iisstart.htm\' -Value $(\'Hello World from \' + $env:computername)'
+    }
+  }
+  dependsOn: [
+    virtualMachine
+    vmNic
+  ]
+}]
+
 
 
 output internalLbPrivateIPAddress string = loadBalancer.properties.frontendIPConfigurations[0].properties.privateIPAddress
