@@ -60,17 +60,10 @@ resource loadBalancer 'Microsoft.Network/loadBalancers@2021-05-01' = {
   properties: {
     frontendIPConfigurations: [
       {
-        properties: {
-          subnet: {
-            id: subnetRef
-          }
-
-          publicIPAddress: {
-             id: publicIP.id
-          }
-          //privateIPAllocationMethod: 'Dynamic'
-        }
         name: 'LoadBalancerFrontend'
+        properties: {
+          privateIPAddress: publicIP.properties.ipAddress
+        }
       }
     ]
     backendAddressPools: [
@@ -111,6 +104,7 @@ resource loadBalancer 'Microsoft.Network/loadBalancers@2021-05-01' = {
     ]
   }
   dependsOn: [
+    publicIP
   ]
 }
 
