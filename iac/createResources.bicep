@@ -921,8 +921,8 @@ resource productimagesstgacc_roledefinition 'Microsoft.Authorization/roleDefinit
 // This requires the service principal to be in 'owner' role or a custom role with 'Microsoft.Authorization/roleAssignments/write' permissions.
 // Details: https://learn.microsoft.com/en-us/answers/questions/287573/authorization-failed-when-when-writing-a-roleassig.html
 resource roleAssignment3 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  scope: ui2stgacc
-  name: guid(resourceGroup().id, ui2stgacc_mi.id, ui2stgacc_roledefinition.id)
+  scope: productimagesstgacc
+  name: guid(resourceGroup().id, productimagesstgacc_mi.id, productimagesstgacc_roledefinition.id)
   properties: {
     roleDefinitionId: productimagesstgacc_roledefinition.id
     principalId: productimagesstgacc_mi.properties.principalId
