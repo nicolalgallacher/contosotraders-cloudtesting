@@ -101,8 +101,9 @@ var cartsInternalApiSettingNameManagedIdentityClientId = 'ManagedIdentityClientI
 
 // storage account (product images)
 var productImagesStgAccName = '${prefix}img${suffix}'
-var productImagesProductDetailsContainerName = 'product-details'
-var productImagesProductListContainerName = 'product-list'
+//JM- because of moving to $web
+//var productImagesProductDetailsContainerName = 'product-details'
+//var productImagesProductListContainerName = 'product-list'
 
 // storage account (old website)
 var uiStgAccName = '${prefix}ui${suffix}'
