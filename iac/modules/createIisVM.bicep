@@ -64,7 +64,10 @@ resource loadBalancer 'Microsoft.Network/loadBalancers@2021-05-01' = {
           subnet: {
             id: subnetRef
           }
-          publicIPAddress: publicIP
+
+          publicIPAddress: {
+             id: publicIP.id
+          }
           //privateIPAllocationMethod: 'Dynamic'
         }
         name: 'LoadBalancerFrontend'
