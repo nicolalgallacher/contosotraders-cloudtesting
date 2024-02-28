@@ -1485,7 +1485,30 @@ module vnetWebSubnetNsg './modules/createNsg.bicep' = if (deployPrivateEndpoints
     params: {
       location: resourceLocation
       nsgName: '${vnetWebSubnetName}-nsg-${resourceLocation}'
-      nsgRules: []
+      nsgRules: [
+        {
+          name: 'AllowHTTPInbound'
+          protocol: 'Tcp'
+          sourcePortRange: '*'
+          destinationPortRange: '80'
+          sourceAddressPrefix: '*'
+          //destinationAddressPrefix: '*'
+          access: 'Allow'
+          priority: '100'
+          direction: 'Inbound'
+        }
+        {
+          name: 'AllowHTTPOutboundToLoadBalancer'
+          protocol: 'Tcp'
+          sourcePortRange: '*'
+          destinationPortRange: '80'
+          sourceAddressPrefix: '*'
+          destinationAddressPrefix: 'AzureLoadBalancer'
+          access: 'Allow'
+          priority: '100'
+          direction: 'Outbound'
+        }
+      ]
       resourceTags: resourceTags
     }
     dependsOn: [
