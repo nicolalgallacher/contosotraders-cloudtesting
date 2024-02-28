@@ -58,11 +58,13 @@ resource loadBalancer 'Microsoft.Network/loadBalancers@2021-05-01' = {
     name: 'Standard'
   }
   properties: {
-    frontendIPConfigurations: [
+    frontendIPConfigurations: [ 
       {
         name: 'LoadBalancerFrontend'
         properties: {
-          publicIPAddress: publicIP
+          publicIPPrefix: {
+            id: publicIP.id
+          }
         }
       }
     ]
