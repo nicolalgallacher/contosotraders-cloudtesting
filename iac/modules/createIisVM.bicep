@@ -47,6 +47,7 @@ resource publicIP 'Microsoft.Network/publicIPAddresses@2021-08-01' = {
   properties: {
     publicIPAllocationMethod: 'Static'
     publicIPAddressVersion: 'IPv4'
+    }
   }
 }
 
@@ -62,7 +63,7 @@ resource loadBalancer 'Microsoft.Network/loadBalancers@2021-05-01' = {
       {
         name: 'LoadBalancerFrontend'
         properties: {
-          publicIPPrefix: {
+          publicIPAddress: {
             id: publicIP.id
           }
         }
@@ -199,5 +200,5 @@ resource InstallWebServer 'Microsoft.Compute/virtualMachines/extensions@2021-11-
 
 
 
-output internalLbPrivateIPAddress string = publicIP.properties.ipAddress
+//output internalLbPrivateIPAddress string = publicIP.properties.ipAddress
 
