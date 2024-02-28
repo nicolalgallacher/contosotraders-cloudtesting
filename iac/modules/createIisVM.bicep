@@ -37,6 +37,18 @@ var loadBalancerName = 'iisInternalLb'
 
 var subnetRef = resourceId(exsitingVNetResourceGroup, 'Microsoft.Network/virtualNetWorks/subnets', exsistingVirtualNetworkName, exsistingSubnetName)
 
+//
+resource publicIP 'Microsoft.Network/publicIPAddresses@2021-08-01' = {
+  name: 'lbpublicIPname' 
+  location: location
+  sku: {
+    name: 'Standard'
+  }
+  properties: {
+    publicIPAllocationMethod: 'Static'
+    publicIPAddressVersion: 'IPv4'
+  }
+}
 
 //Internal Load Balancer Setup 
 resource loadBalancer 'Microsoft.Network/loadBalancers@2021-05-01' = {
@@ -52,7 +64,8 @@ resource loadBalancer 'Microsoft.Network/loadBalancers@2021-05-01' = {
           subnet: {
             id: subnetRef
           }
-          privateIPAllocationMethod: 'Dynamic'
+          publicIPAddress: publicIP
+          //privateIPAllocationMethod: 'Dynamic'
         }
         name: 'LoadBalancerFrontend'
       }
@@ -187,5 +200,5 @@ resource InstallWebServer 'Microsoft.Compute/virtualMachines/extensions@2021-11-
 
 
 
-output internalLbPrivateIPAddress string = loadBalancer.properties.frontendIPConfigurations[0].properties.privateIPAddress
+output internalLbPrivateIPAddress string = publicIP.properties.ipAddress
 
