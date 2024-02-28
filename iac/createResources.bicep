@@ -1503,7 +1503,7 @@ module vnetWebSubnetNsg './modules/createNsg.bicep' = if (deployPrivateEndpoints
           sourcePortRange: '*'
           destinationPortRange: '80'
           sourceAddressPrefix: '*'
-          destinationAddressPrefix: 'AzureLoadBalancer'
+          //destinationAddressPrefix: 'azureLoadBalancer' 
           access: 'Allow'
           priority: '100'
           direction: 'Outbound'
