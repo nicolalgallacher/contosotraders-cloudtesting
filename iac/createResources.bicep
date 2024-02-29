@@ -297,13 +297,13 @@ resource kv 'Microsoft.KeyVault/vaults@2022-07-01' = {
     }
   }
 
-  // secret
+  // secret JM amended
   resource kv_secretImagesEndpoint 'secrets' = {
     name: kvSecretNameImagesEndpoint
     tags: resourceTags
     properties: {
       contentType: 'endpoint url of the images cdn'
-      value: 'https://${cdnprofile_imagesendpoint.properties.hostName}'
+      value: 'https://${newFrontDoor.outputs.imagesEndpoint}'
     }
   }
 
