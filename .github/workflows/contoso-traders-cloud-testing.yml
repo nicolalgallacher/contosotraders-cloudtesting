@@ -429,8 +429,9 @@ jobs:
         working-directory: src/ContosoTraders.Ui.Website
       - name: deploy ui to storage
         uses: azure/CLI@v1
-        with: #move IIS copy to here 
+        with:  
           inlineScript: az storage blob sync --account-name '${{ env.UI_STORAGE_ACCOUNT_NAME }}${{ vars.SUFFIX }}' -c '$web' -s 'src/ContosoTraders.Ui.Website/build'
+      
       - name: Copy App to IIS
         uses: azure/azure-file-copy@v4
         with:
