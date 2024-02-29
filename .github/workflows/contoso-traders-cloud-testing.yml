@@ -431,6 +431,14 @@ jobs:
         uses: azure/CLI@v1
         with: #move IIS copy to here 
           inlineScript: az storage blob sync --account-name '${{ env.UI_STORAGE_ACCOUNT_NAME }}${{ vars.SUFFIX }}' -c '$web' -s 'src/ContosoTraders.Ui.Website/build'
+      - name: Copy App to IIS
+        uses: azure/azure-file-copy@v4
+        with:
+            sourcePath: '${{ env.UI_STORAGE_ACCOUNT_NAME }}${{ vars.SUFFIX }}/$web'
+            azureSubscription: ${{ secret.SUBSCRIPTION_NAME }}
+            Destination: 'AzureVMs'
+            VMResources: '${{ env.RESOURCE_GROUP_NAME }}/vmiis-0'
+            TargetPath: 'C:\ReactApp' 
       - name: purge ui cdn endpoint
         uses: azure/CLI@v1
         with:
@@ -454,11 +462,7 @@ jobs:
         uses: azure/CLI@v1
         with:
           inlineScript: echo UI CDN endpoint accessible at https://$(az keyvault secret show --vault-name ${{ env.KV_NAME }}${{ vars.SUFFIX }} --name uiCdnEndpoint --query value -o tsv)
-      - name: iis-AppCopy #IIS APP COPY 
-        uses: azure/CLI@v1 
-        with: 
-          inlineScript: az storage blob download --account-name ${{ env.UI_STORAGE_ACCOUNT_NAME }} --account-key ${{ secrets.UI_STORAGE_KEY}} --destination '10.0.6.4\c$\ReactApp'
-
+    
   load-tests-with-chaos-products-api:
     needs: [provision, playwright-tests-ui]
     runs-on: ubuntu-22.04
