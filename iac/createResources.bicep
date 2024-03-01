@@ -1619,6 +1619,7 @@ module iisVMs './modules/createIisVM.bicep' = { //TODO: Add Feature Flag
     exsistingSubnetName:vnetWebSubnetName 
     exsistingVirtualNetworkName: vnetName 
     exsitingVNetResourceGroup: resourceGroup().name
+    // azCopyScript: loadTextContent('./scripts/azcopyInstall.ps1')
   }
 }
 

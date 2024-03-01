@@ -9,6 +9,8 @@
 param location string 
 //param vNet string
 
+// param azCopyScript string
+
 //param backendPoolID string
 param exsistingSubnetName string
 param exsistingVirtualNetworkName string 
@@ -197,7 +199,24 @@ resource InstallWebServer 'Microsoft.Compute/virtualMachines/extensions@2021-11-
   ]
 }]
 
-
+// @batchSize(1)
+// resource InstallAzCopy 'Microsoft.Compute/virtualMachines/extensions@2021-11-01' = [for i in range(0, count): {
+//   name: '${vmName}-${i}/InstallAzCopy'
+//   location: location
+//   properties: {
+//     publisher: 'Microsoft.Compute'
+//     type: 'CustomScriptExtension'
+//     typeHandlerVersion: '1.7'
+//     autoUpgradeMinorVersion: true
+//     settings: {
+//       commandToExecute: 'powershell.exe ${azCopyScript}'
+//     }
+//   }
+//   dependsOn: [
+//     virtualMachine
+//     vmNic
+//   ]
+// }]
 
 //output internalLbPrivateIPAddress string = publicIP.properties.ipAddress
 

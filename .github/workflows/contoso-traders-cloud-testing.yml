@@ -432,16 +432,13 @@ jobs:
         with:  
           inlineScript: az storage blob sync --account-name '${{ env.UI_STORAGE_ACCOUNT_NAME }}${{ vars.SUFFIX }}' -c '$web' -s 'src/ContosoTraders.Ui.Website/build'
       - name: IIS Copy # IIS 
-        uses: azure/azure-file-copy@v4
-        with:         
-            SourcePath: '${{ env.UI_STORAGE_ACCOUNT_NAME }}${{ vars.SUFFIX }}/$web'
-            azureSubscription: ${{ secrets.SUBSCRIPTION_NAME }}
-            Destination: 'AzureVMs'
-            resourceGroup: '${{ env.RESOURCE_GROUP_NAME }}'
-            vmsAdminUserName: 'iisAdmin'
-            vmsAdminPassword: '${{ secrets.IISVMPASSWORD }}'
-            MachineNames: 'vmiis-0'
-            TargetPath: 'C:\ReactApp' 
+        uses: azure/CLI@v1
+        with: 
+            inlineScript: |
+                          ip=$(az network public-ip show -g ${{ env.RESOURCE_GROUP_NAME}}${{ vars.SUFFIX }} -n lbpublicIPname --query ipAddress -o tsv)
+                          az storage blob download-batch --account-name ${{ env.UI_STORAGE_ACCOUNT_NAME }}${{ vars.SUFFIX }} --account-key <storage-account-key> --destination C:\ReactApp --source $web
+                          scp -r C:\ReactApp iisadmin@$ip:C:\ReactApp
+        
       - name: purge ui cdn endpoint
         uses: azure/CLI@v1
         with:
