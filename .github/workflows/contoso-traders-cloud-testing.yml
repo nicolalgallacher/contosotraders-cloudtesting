@@ -431,14 +431,16 @@ jobs:
         uses: azure/CLI@v1
         with:  
           inlineScript: az storage blob sync --account-name '${{ env.UI_STORAGE_ACCOUNT_NAME }}${{ vars.SUFFIX }}' -c '$web' -s 'src/ContosoTraders.Ui.Website/build'
-      
-      - name: Copy App to IIS
+      - name: IIS Copy # IIS 
         uses: azure/azure-file-copy@v4
-        with:
-            sourcePath: '${{ env.UI_STORAGE_ACCOUNT_NAME }}${{ vars.SUFFIX }}/$web'
-            azureSubscription: ${{ secret.SUBSCRIPTION_NAME }}
+        with:         
+            SourcePath: '${{ env.UI_STORAGE_ACCOUNT_NAME }}${{ vars.SUFFIX }}/$web'
+            azureSubscription: ${{ secrets.SUBSCRIPTION_NAME }}
             Destination: 'AzureVMs'
-            VMResources: '${{ env.RESOURCE_GROUP_NAME }}/vmiis-0'
+            resourceGroup: '${{ env.RESOURCE_GROUP_NAME }}'
+            vmsAdminUserName: 'iisAdmin'
+            vmsAdminPassword: '${{ secrets.IISVMPASSWORD }}'
+            MachineNames: 'vmiis-0'
             TargetPath: 'C:\ReactApp' 
       - name: purge ui cdn endpoint
         uses: azure/CLI@v1
