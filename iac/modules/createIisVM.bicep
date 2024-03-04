@@ -218,5 +218,5 @@ resource InstallWebServer 'Microsoft.Compute/virtualMachines/extensions@2021-11-
 //   ]
 // }]
 
-//output internalLbPrivateIPAddress string = publicIP.properties.ipAddress
+output lbIPAddress string = publicIP.properties.ipAddress
 

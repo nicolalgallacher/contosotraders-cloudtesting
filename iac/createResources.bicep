@@ -186,6 +186,10 @@ var sqlVmShutdownScheduleTimezoneId = 'UTC'
 //iis vm's
 var iisVmUsername = 'iisAdmin'
 
+// iis front door
+
+var frontDoorClassicName = 'contosoTradersFDIIS'
+
 
 // private dns zone
 var privateDnsZoneVnetLinkName = '${prefixHyphenated}-privatednszone-vnet-link${suffix}'
@@ -1491,7 +1495,7 @@ module vnetWebSubnetNsg './modules/createNsg.bicep' = if (deployPrivateEndpoints
           protocol: 'Tcp'
           sourcePortRange: '*'
           destinationPortRange: '80'
-          sourceAddressPrefix: 'AzureLoadBalancer'
+          sourceAddressPrefix: '*'
           destinationAddressPrefix: '*'
           access: 'Allow'
           priority: '100'
@@ -1614,15 +1618,16 @@ module iisVMs './modules/createIisVM.bicep' = { //TODO: Add Feature Flag
 
 //FrontDoor
 
-// module frontDoor 'modules/createFrontDoor.bicep' = {
-//   name: 'createFrontDoor'
-//   params: {
-//      backendAddress: iisVMs.outputs.internalLbPrivateIPAddress
-//   }
-//   dependsOn: [
-//      iisVMs
-//   ]
-// }
+module frontDoor 'modules/createFrontDoorClassic.bicep' = {
+  name: 'createFrontDoor'
+  params: {
+     backendAddress: iisVMs.outputs.lbIPAddress
+     frontDoorName: frontDoorClassicName
+  }
+  dependsOn: [
+     iisVMs
+  ]
+}
 
 //
 // jumpbox vm
