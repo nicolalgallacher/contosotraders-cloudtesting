@@ -2096,7 +2096,7 @@ resource chaoskvexperiment 'Microsoft.Chaos/experiments@2022-10-01-preview' = {
 }
 
 // target: aks
-resource chaosakstarget 'Microsoft.Chaos/targets@2022-10-01-preview' = {
+resource chaosakstarget 'Microsoft.Chaos/targets@2022-10-01-preview' = if (deployVmBasedApis != true) {
   name: 'Microsoft-AzureKubernetesServiceChaosMesh'
   location: resourceLocation
   scope: aks
@@ -2109,7 +2109,7 @@ resource chaosakstarget 'Microsoft.Chaos/targets@2022-10-01-preview' = {
 }
 
 // chaos experiment: aks (chaos mesh)
-resource chaosaksexperiment 'Microsoft.Chaos/experiments@2022-10-01-preview' = {
+resource chaosaksexperiment 'Microsoft.Chaos/experiments@2022-10-01-preview' = if (deployVmBasedApis != true) {
   name: chaosAksExperimentName
   location: resourceLocation
   tags: resourceTags
