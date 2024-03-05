@@ -1,49 +1,42 @@
-param location string = 'westeurope'
-param cartvmName string = 'cartVM'
-param prodvmName string = 'prodVM'
-param adminUsername string = 'azureadmin'
+param location string
+param adminUsername string
+@secure()
 param adminPassword string 
-param managedIdentityId string = '/subscriptions/41bcf9d5-ccdd-4903-821e-a368aac35830/resourcegroups/contoso-traders-rgjjj/providers/Microsoft.ManagedIdentity/userAssignedIdentities/contoso-traders-mi-kv-accessjjj'
 
-resource myVnet 'Microsoft.Network/virtualNetworks@2021-02-01' = {
-  name: 'myVnet'
-  location: location
-  properties: {
-    addressSpace: {
-      addressPrefixes: [
-        '10.0.0.0/16'
-      ]
-    }
-    subnets: [
-      {
-        name: 'default'
-        properties: {
-          addressPrefix: '10.0.0.0/24'
-        }
-      }
-    ]
-  }
-}
+param managedIdentityId string
+param subnetId string
+param cartCname string
+param productCname string
+param resourceTags object
+
+var cartVmName = 'cartVM'
+var prodVmName = 'prodVM'
+ 
 
 resource cartPublicIP 'Microsoft.Network/publicIPAddresses@2021-02-01' = {
   name: 'cartPublicIP'
   location: location
+  tags: resourceTags
   properties: {
     publicIPAllocationMethod: 'Dynamic'
+    dnsSettings: {
+        domainNameLabel: cartCname
+        fqdn: cartCname
+    }
   }
 }
-
 
 resource cartNIC 'Microsoft.Network/networkInterfaces@2021-02-01' = {
   name: 'cartNIC'
   location: location
+  tags: resourceTags
   properties: {
     ipConfigurations: [
       {
         name: 'myIPConfig'
         properties: {
           subnet: {
-            id: myVnet.properties.subnets[0].id
+            id: subnetId
           }
           publicIPAddress: {
             id: cartPublicIP.id
@@ -55,17 +48,15 @@ resource cartNIC 'Microsoft.Network/networkInterfaces@2021-02-01' = {
 }
 
 resource cartVM 'Microsoft.Compute/virtualMachines@2021-03-01' = {
-  name: cartvmName
+  name: cartVmName
   location: location
-  dependsOn: [
-    cartNIC
-  ]
+  tags: resourceTags
   properties: {
     hardwareProfile: {
       vmSize: 'Standard_DS2_v2'
     }
     osProfile: {
-      computerName: cartvmName
+      computerName: cartVmName
       adminUsername: adminUsername
       adminPassword: adminPassword
     }
@@ -102,6 +93,7 @@ resource cartVM_extensionName 'Microsoft.Compute/virtualMachines/extensions@2019
   parent: cartVM
   name: 'DockerExtension'
   location: location
+  tags: resourceTags
   properties: {
     publisher: 'Microsoft.Azure.Extensions'
     type: 'DockerExtension'
@@ -113,21 +105,27 @@ resource cartVM_extensionName 'Microsoft.Compute/virtualMachines/extensions@2019
 resource prodPublicIP 'Microsoft.Network/publicIPAddresses@2021-02-01' = {
   name: 'prodPublicIP'
   location: location
+  tags: resourceTags
   properties: {
     publicIPAllocationMethod: 'Dynamic'
+    dnsSettings: {
+        domainNameLabel: productCname
+        fqdn: productCname
+    }
   }
 }
 
 resource prodNIC 'Microsoft.Network/networkInterfaces@2021-02-01' = {
   name: 'prodNIC'
   location: location
+  tags: resourceTags
   properties: {
     ipConfigurations: [
       {
         name: 'myIPConfig'
         properties: {
           subnet: {
-            id: myVnet.properties.subnets[0].id
+            id: subnetId
           }
           publicIPAddress: {
             id: prodPublicIP.id
@@ -139,17 +137,15 @@ resource prodNIC 'Microsoft.Network/networkInterfaces@2021-02-01' = {
 }
 
 resource prodVM 'Microsoft.Compute/virtualMachines@2021-03-01' = {
-  name: prodvmName
+  name: prodVmName
   location: location
-  dependsOn: [
-    prodNIC
-  ]
+  tags: resourceTags
   properties: {
     hardwareProfile: {
       vmSize: 'Standard_DS2_v2'
     }
     osProfile: {
-      computerName: prodvmName
+      computerName: prodVmName
       adminUsername: adminUsername
       adminPassword: adminPassword
     }
@@ -186,6 +182,7 @@ resource prodVM_extensionName 'Microsoft.Compute/virtualMachines/extensions@2019
   parent: prodVM
   name: 'DockerExtension'
   location: location
+  tags: resourceTags
   properties: {
     publisher: 'Microsoft.Azure.Extensions'
     type: 'DockerExtension'

@@ -41,7 +41,12 @@ env:
   UI_CDN_ENDPOINT_NAME: contoso-traders-ui2
   UI_STORAGE_ACCOUNT_NAME: contosotradersui2
   USER_ASSIGNED_MANAGED_IDENTITY_NAME: contoso-traders-mi-kv-access
- 
+  PROD_VM: jjprodapi.westeurope.cloudapp.azure.com
+  CART_VM: jjcartapi.westeurope.cloudapp.azure.com
+  PROD_VM_NAME: prodVM
+  CART_VM_NAME: cartVM
+  
+
 jobs:
   provision:
     runs-on: ubuntu-22.04
@@ -148,13 +153,15 @@ jobs:
       # Note: The bicep template outputs are not shown in the logs. You can extract the outputs as shown here:
       # https://github.com/Azure/arm-deploy#another-example-on-how-to-use-this-action-to-get-the-output-of-arm-template
       - name: create resources
+        id: createResources
         uses: Azure/arm-deploy@v1
         with:
           scope: resourcegroup
           region: ${{ vars.DEPLOYMENTREGION }}
           resourceGroupName: ${{ env.RESOURCE_GROUP_NAME }}${{ vars.SUFFIX }}
           template: ./iac/createResources.bicep
-          parameters: ./iac/createResources.parameters.json suffix=${{ vars.SUFFIX }} sqlPassword=${{ secrets.SQLPASSWORD }} deployPrivateEndpoints=${{ vars.DEPLOYPRIVATEENDPOINTS }} deploySqlOnIaas=${{ vars.DEPLOYSQLONIAAS }}
+          parameters: ./iac/createResources.parameters.json suffix=${{ vars.SUFFIX }} sqlPassword=${{ secrets.SQLPASSWORD }} deployPrivateEndpoints=${{ vars.DEPLOYPRIVATEENDPOINTS }} deploySqlOnIaas=${{ vars.DEPLOYSQLONIAAS }} deployVmBasedApis=${{ vars.DEPLOYVMBASEDAPIS }}
+
       # Add the logged-in service principal to the key vault access policy
       - name: add service principal to kv access policy
         uses: azure/CLI@v1
@@ -184,11 +191,11 @@ jobs:
       - name: seed product image (product details)
         uses: azure/CLI@v1
         with:
-          inlineScript: az storage blob sync --account-name '${{ env.PRODUCT_IMAGES_STORAGE_ACCOUNT_NAME }}${{ vars.SUFFIX }}' -c '${{ env.PRODUCT_DETAILS_CONTAINER_NAME }}' -s 'src/ContosoTraders.Api.Images/product-details'
+          inlineScript: az storage blob sync --account-name '${{ env.PRODUCT_IMAGES_STORAGE_ACCOUNT_NAME }}${{ vars.SUFFIX }}' -c '$web/${{ env.PRODUCT_DETAILS_CONTAINER_NAME }}' -s 'src/ContosoTraders.Api.Images/product-details'
       - name: seed product image (product list)
         uses: azure/CLI@v1
         with:
-          inlineScript: az storage blob sync --account-name '${{ env.PRODUCT_IMAGES_STORAGE_ACCOUNT_NAME }}${{ vars.SUFFIX }}' -c '${{ env.PRODUCT_LIST_CONTAINER_NAME }}' -s 'src/ContosoTraders.Api.Images/product-list'
+          inlineScript: az storage blob sync --account-name '${{ env.PRODUCT_IMAGES_STORAGE_ACCOUNT_NAME }}${{ vars.SUFFIX }}' -c '$web/${{ env.PRODUCT_LIST_CONTAINER_NAME }}' -s 'src/ContosoTraders.Api.Images/product-list'
       - name: purge product images cdn endpoint
         uses: azure/CLI@v1
         with:
@@ -237,7 +244,31 @@ jobs:
         id: get-cartsApiEndpoint
         with:
           inlineScript: echo "cartsApiEndpoint"="$(az keyvault secret show --vault-name ${{ env.KV_NAME }}${{ vars.SUFFIX }} --name cartsApiEndpoint --query value -o tsv)" >> $GITHUB_OUTPUT
-
+      
+      # get the managed identity client id for later (JM moved upwards)
+      - name: get managedIdentityClientId
+        uses: azure/CLI@v1
+        id: get-managedIdentityClientId
+        with:
+          inlineScript: echo "managedIdentityClientId"="$(az identity show -g ${{ env.RESOURCE_GROUP_NAME }}${{ vars.SUFFIX }} --name ${{ env.USER_ASSIGNED_MANAGED_IDENTITY_NAME }}${{ vars.SUFFIX }} --query "clientId" -o tsv)" >> $GITHUB_OUTPUT
+      
+      # add a deploy to the carts VM JM+
+      - name: Export variables from secret
+        if: ${{ vars.DEPLOYVMBASEDAPIS == 'true' }}
+        run: |
+          ENV_JSON='${{ secrets.SERVICEPRINCIPAL }}'
+          echo "$ENV_JSON" | jq -r 'to_entries[] | "\(.key)=\(.value)"' >> $GITHUB_ENV
+      - name: Run Docker container on Azure VM
+        if: ${{ vars.DEPLOYVMBASEDAPIS == 'true' }}
+        uses: Azure/cli@v1.0.9
+        with:
+         azcliversion: 2.0.72
+         inlineScript: |
+          az login --service-principal -u ${{ env.clientId }} -p ${{ env.clientSecret }} --tenant ${{ env.tenantId }}
+          az vm run-command invoke -g ${{ env.RESOURCE_GROUP_NAME }}${{ vars.SUFFIX }} -n ${{ env.CART_VM_NAME }} --command-id RunShellScript --scripts "docker login --username ${{ env.ACR_NAME }}${{ vars.SUFFIX }} --password ${{ secrets.ACRPASSWORD }} ${{ env.ACR_NAME }}${{ vars.SUFFIX }}.azurecr.io && docker pull ${{ env.ACR_NAME }}${{ vars.SUFFIX }}.azurecr.io/${{ env.CARTS_ACR_REPOSITORY_NAME }}:${{ github.sha }} && docker run -d --restart=always -p 80:80 -e KeyVaultEndpoint='https://contosotraderskv${{ vars.SUFFIX }}.vault.azure.net/' -e ManagedIdentityClientId='${{ steps.get-managedIdentityClientId.outputs.managedIdentityClientId }}'  ${{ env.ACR_NAME }}${{ vars.SUFFIX }}.azurecr.io/${{ env.CARTS_ACR_REPOSITORY_NAME }}:${{ github.sha }}"
+        env:
+         AZURE_SUBSCRIPTION_ID: ${{ env.subscriptionId }}
+      
       #
       # section #3: deploy the products api
       #
@@ -250,6 +281,25 @@ jobs:
         run: docker build src -f ./src/ContosoTraders.Api.Products/Dockerfile -t ${{ env.ACR_NAME }}${{ vars.SUFFIX }}.azurecr.io/${{ env.PRODUCTS_ACR_REPOSITORY_NAME }}:latest -t ${{ env.ACR_NAME }}${{ vars.SUFFIX }}.azurecr.io/${{ env.PRODUCTS_ACR_REPOSITORY_NAME }}:${{ github.sha }}
       - name: docker push (to acr)
         run: docker push --all-tags ${{ env.ACR_NAME }}${{ vars.SUFFIX }}.azurecr.io/${{ env.PRODUCTS_ACR_REPOSITORY_NAME }}
+      
+      # JM+ deploy to VM
+      # add a deploy to the products VM
+      - name: Export variables from secret
+        if: ${{ vars.DEPLOYVMBASEDAPIS == 'true' }}
+        run: |
+          ENV_JSON='${{ secrets.SERVICEPRINCIPAL }}'
+          echo "$ENV_JSON" | jq -r 'to_entries[] | "\(.key)=\(.value)"' >> $GITHUB_ENV
+      - name: Run Docker container on Azure VM
+        if: ${{ vars.DEPLOYVMBASEDAPIS == 'true' }}
+        uses: Azure/cli@v1.0.9
+        with:
+         azcliversion: 2.0.72
+         inlineScript: |
+          az login --service-principal -u ${{ env.clientId }} -p ${{ env.clientSecret }} --tenant ${{ env.tenantId }}
+          az vm run-command invoke -g ${{ env.RESOURCE_GROUP_NAME }}${{ vars.SUFFIX }} -n ${{ env.PROD_VM_NAME }} --command-id RunShellScript --scripts "docker login --username ${{ env.ACR_NAME }}${{ vars.SUFFIX }} --password ${{ secrets.ACRPASSWORD }} ${{ env.ACR_NAME }}${{ vars.SUFFIX }}.azurecr.io && docker pull ${{ env.ACR_NAME }}${{ vars.SUFFIX }}.azurecr.io/${{ env.CARTS_ACR_REPOSITORY_NAME }}:${{ github.sha }} && docker run -d --restart=always -p 80:80 -e KeyVaultEndpoint='https://contosotraderskv${{ vars.SUFFIX }}.vault.azure.net/' -e ManagedIdentityClientId='${{ steps.get-managedIdentityClientId.outputs.managedIdentityClientId }}'  ${{ env.ACR_NAME }}${{ vars.SUFFIX }}.azurecr.io/${{ env.PRODUCTS_ACR_REPOSITORY_NAME }}:${{ github.sha }}"
+        env:
+         AZURE_SUBSCRIPTION_ID: ${{ env.subscriptionId }}
+      
       - name: setup kubectl
         uses: azure/setup-kubectl@v3
       - name: create kubernetes secret (acr password)
@@ -259,11 +309,7 @@ jobs:
           container-registry-url: ${{ env.ACR_NAME }}${{ vars.SUFFIX }}.azurecr.io
           container-registry-username: ${{ env.ACR_NAME }}${{ vars.SUFFIX }}
           container-registry-password: ${{ steps.extract-acr-password.outputs.acrPassword }}
-      - name: get managedIdentityClientId
-        uses: azure/CLI@v1
-        id: get-managedIdentityClientId
-        with:
-          inlineScript: echo "managedIdentityClientId"="$(az identity show -g ${{ env.RESOURCE_GROUP_NAME }}${{ vars.SUFFIX }} --name ${{ env.USER_ASSIGNED_MANAGED_IDENTITY_NAME }}${{ vars.SUFFIX }} --query "clientId" -o tsv)" >> $GITHUB_OUTPUT
+      
       - name: create kubernetes secret (kv endpoint)
         uses: Azure/k8s-create-secret@v4
         with:
@@ -405,12 +451,21 @@ jobs:
           inlineScript: echo "productsApiEndpoint"="$(az keyvault secret show --vault-name ${{ env.KV_NAME }}${{ vars.SUFFIX }} --name productsApiEndpoint --query value -o tsv)" >> $GITHUB_OUTPUT
 
       #
-      # section #4: deploy the ui
+      # section #4: deploy the ui (JM+)
       #
+      - name: set REACT_APP_APIURLSHOPPINGCART_VM
+        if: ${{ vars.DEPLOYVMBASEDAPIS == 'true' }}
+        run: echo "REACT_APP_APIURLSHOPPINGCART"= 'https://${{ steps.createResources.outputs.newFdCartVmApiEndpoint   }}/v1' >> $GITHUB_ENV
       - name: set REACT_APP_APIURLSHOPPINGCART
-        run: echo "REACT_APP_APIURLSHOPPINGCART"="https://${{ steps.get-cartsApiEndpoint.outputs.cartsApiEndpoint }}/v1" >> $GITHUB_ENV
+        if: ${{ vars.DEPLOYVMBASEDAPIS != 'true' }}
+        run: echo "REACT_APP_APIURLSHOPPINGCART"="http://${{ steps.createResources.outputs.cartVmApiEndpoint }}/v1" >> $GITHUB_ENV
+      - name: set REACT_APP_APIURL_VM
+        if: ${{ vars.DEPLOYVMBASEDAPIS == 'true' }}
+        run: echo "REACT_APP_APIURL"= 'https://${{ steps.createResources.outputs.newFdProdVmApiEndpoint  }}/v1' >> $GITHUB_ENV
       - name: set REACT_APP_APIURL
-        run: echo "REACT_APP_APIURL"="https://${{ steps.get-productsApiEndpoint.outputs.productsApiEndpoint }}/v1" >> $GITHUB_ENV
+        if: ${{ vars.DEPLOYVMBASEDAPIS != 'true' }}
+        run: echo "REACT_APP_APIURL"="http://${{ steps.createResources.outputs.productVmApiEndpoint }}/v1" >> $GITHUB_ENV
+        
       - name: set REACT_APP_B2CCLIENTID
         if: ${{ env.AADUSERNAME != '' && env.AADPASSWORD != '' }}
         run: echo "REACT_APP_B2CCLIENTID"="${{ steps.get-azureAdAppClientId.outputs.azureAdAppClientId }}" >> $GITHUB_ENV

@@ -33,9 +33,11 @@ param trustServerCertificate bool = deploySqlOnIaas ? true : false
 // use param to conditionally deploy private endpoint resources
 param deployPrivateEndpoints bool = false
 
+// use param to conditionally deploy private endpoint resources
+param deployVmBasedApis bool = false
+
 // use param to conditionally deploy SQL on IAAS
 param deploySqlOnIaas bool = false
-
 
 
 // variables
@@ -106,8 +108,9 @@ var cartsInternalApiSettingNameManagedIdentityClientId = 'ManagedIdentityClientI
 
 // storage account (product images)
 var productImagesStgAccName = '${prefix}img${suffix}'
-var productImagesProductDetailsContainerName = 'product-details'
-var productImagesProductListContainerName = 'product-list'
+//JM- because of moving to $web
+//var productImagesProductDetailsContainerName = 'product-details'
+//var productImagesProductListContainerName = 'product-list'
 
 // storage account (old website)
 var uiStgAccName = '${prefix}ui${suffix}'
@@ -158,6 +161,14 @@ var vnetDBSubnetName = 'subnet-db'
 var vnetDBSubnetAddressPrefix = '10.0.8.0/23'
 var vnetBastionSubnetName = 'AzureBastionSubnet'
 var vnetBastionSubnetAddressPrefix = '10.0.10.0/23'
+
+// VM-based docker APIs (JM+)
+var productApiCname = '${prefixHyphenated}-prodapi${suffix}.${resourceLocation}.cloudapp.azure.com'
+var cartApiCname = '${prefixHyphenated}-cartapi${suffix}.${resourceLocation}.cloudapp.azure.com'
+
+// front door standard (JM+) images now web exposed
+//var imagesCname = '${productImagesStgAccName}.z6.web.core.windows.net'
+//var webStoreCname = '${prefixHyphenated}${suffix}.z6.web.core.windows.net'
 
 // bastion
 var bastionHostName = '${prefixHyphenated}-bastion${suffix}'
@@ -300,13 +311,13 @@ resource kv 'Microsoft.KeyVault/vaults@2022-07-01' = {
     }
   }
 
-  // secret
+  // secret JM amended
   resource kv_secretImagesEndpoint 'secrets' = {
     name: kvSecretNameImagesEndpoint
     tags: resourceTags
     properties: {
       contentType: 'endpoint url of the images cdn'
-      value: 'https://${cdnprofile_imagesendpoint.properties.hostName}'
+      value: 'https://${newFrontDoor.outputs.imagesEndpoint}'
     }
   }
 
@@ -732,8 +743,9 @@ resource cartsapiaca 'Microsoft.App/containerApps@2022-06-01-preview' = {
 //
 // product images
 //
-
-// storage account (product images)
+// JM removed containers as I hope will go in $web
+//
+// storage account (product images) - JM web exposed
 resource productimagesstgacc 'Microsoft.Storage/storageAccounts@2022-09-01' = {
   name: productImagesStgAccName
   location: resourceLocation
@@ -749,22 +761,6 @@ resource productimagesstgacc 'Microsoft.Storage/storageAccounts@2022-09-01' = {
   // blob service
   resource productimagesstgacc_blobsvc 'blobServices' = {
     name: 'default'
-
-    // container
-    resource productimagesstgacc_blobsvc_productdetailscontainer 'containers' = {
-      name: productImagesProductDetailsContainerName
-      properties: {
-        publicAccess: 'None'
-      }
-    }
-
-    // container
-    resource productimagesstgacc_blobsvc_productlistcontainer 'containers' = {
-      name: productImagesProductListContainerName
-      properties: {
-        publicAccess: 'None'
-      }
-    }
   }
 }
 
@@ -918,6 +914,63 @@ resource deploymentScript2 'Microsoft.Resources/deploymentScripts@2020-10-01' = 
       {
         name: 'StorageAccountName'
         value: ui2stgacc.name
+      }
+    ]
+  }
+}
+
+// web enable images storage account to bypass shared blob issues JM+
+resource productimagesstgacc_mi 'Microsoft.ManagedIdentity/userAssignedIdentities@2022-01-31-preview' = {
+  name: 'DeploymentScript3'
+  location: resourceLocation
+  tags: resourceTags
+}
+
+resource productimagesstgacc_roledefinition 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
+  scope: subscription()
+  // This is the Storage Account Contributor role, which is the minimum role permission we can give. 
+  // See https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#:~:text=17d1049b-9a84-46fb-8f53-869881c3d3ab
+  name: '17d1049b-9a84-46fb-8f53-869881c3d3ab'
+}
+
+// This requires the service principal to be in 'owner' role or a custom role with 'Microsoft.Authorization/roleAssignments/write' permissions.
+// Details: https://learn.microsoft.com/en-us/answers/questions/287573/authorization-failed-when-when-writing-a-roleassig.html
+resource roleAssignment3 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  scope: productimagesstgacc
+  name: guid(resourceGroup().id, productimagesstgacc_mi.id, productimagesstgacc_roledefinition.id)
+  properties: {
+    roleDefinitionId: productimagesstgacc_roledefinition.id
+    principalId: productimagesstgacc_mi.properties.principalId
+    principalType: 'ServicePrincipal'
+  }
+}
+
+resource deploymentScript3 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
+  name: 'DeploymentScript3'
+  location: resourceLocation
+  kind: 'AzurePowerShell'
+  identity: {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${productimagesstgacc_mi.id}': {}
+    }
+  }
+  dependsOn: [
+    // we need to ensure we wait for the role assignment to be deployed before trying to access the storage account
+    roleAssignment
+  ]
+  properties: {
+    azPowerShellVersion: '3.0'
+    scriptContent: loadTextContent('./scripts/enable-static-website.ps1')
+    retentionInterval: 'PT4H'
+    environmentVariables: [
+      {
+        name: 'ResourceGroupName'
+        value: resourceGroup().name
+      }
+      {
+        name: 'StorageAccountName'
+        value: productimagesstgacc.name
       }
     ]
   }
@@ -1416,12 +1469,38 @@ module vnetAcaSubnetNsg './modules/createNsg.bicep' = if (deployPrivateEndpoints
     }
 }
 
+// allow ports 80 and 22 for the VMs JM+
 module vnetVmSubnetNsg './modules/createNsg.bicep' = if (deployPrivateEndpoints) {
   name: 'createVmSubnetNsg'
     params: {
       location: resourceLocation
       nsgName: '${vnetVmSubnetName}-nsg-${resourceLocation}'
-      nsgRules: []
+      nsgRules: [
+        {
+           name: 'HTTPInbound'
+           protocol: 'TCP'
+           sourcePortRange: '*'
+           destinationPortRange: '80'
+           destinationPortRanges: []
+           sourceAddressPrefix: '*'
+           destinationAddressPrefix: '*'
+           access: 'Allow'
+           priority: 100
+           direction: 'Inbound'
+        }
+        {
+           name: 'SSHInbound'
+           protocol: 'TCP'
+           sourcePortRange: '*'
+           destinationPortRange: '22'
+           destinationPortRanges: []
+           sourceAddressPrefix: '*'
+           destinationAddressPrefix: '*'
+           access: 'Allow'
+           priority: 110
+           direction: 'Inbound'
+        }
+      ]
       resourceTags: resourceTags
     }
 }
@@ -1596,7 +1675,7 @@ resource jumpboxvm 'Microsoft.Compute/virtualMachines@2022-08-01' = if (deployPr
       osDisk: {
         createOption: 'FromImage'
         managedDisk: {
-          storageAccountType: 'StandardSSD_LRS'
+          storageAccountType: 'Standard_LRS'
         }
       }
       imageReference: {
@@ -1915,6 +1994,37 @@ resource cartsinternalapiaca 'Microsoft.App/containerApps@2022-06-01-preview' = 
   }
 }
 
+
+//
+// docker VMs for APIs (JM+)
+//
+module dockerVms './create-docker-vms.bicep' = if (deployVmBasedApis) {
+  name: 'createDockerVms'
+    params: {
+      location: resourceLocation
+      adminUsername: 'localadmin'
+      adminPassword: sqlPassword
+      managedIdentityId: userassignedmiforkvaccess.id
+      subnetId: vnet.properties.subnets[1].id
+      cartCname: '${prefixHyphenated}-cartapi${suffix}'
+      productCname: '${prefixHyphenated}-prodapi${suffix}'
+      resourceTags: resourceTags
+    }
+}
+
+//JM+ new front door standard for web, images and APIs
+module newFrontDoor './modules/front-door-standard.bicep' = if (deployVmBasedApis) {
+  name: 'createFrontDoorStandard'
+    params: {
+      frontdoorname: '${prefixHyphenated}-fd-${suffix}'
+      productapicname: productApiCname
+      cartapicname: cartApiCname
+      imagescname: split(productimagesstgacc.properties.primaryEndpoints.web, '/')[2]
+      webstorecname: split(ui2stgacc.properties.primaryEndpoints.web, '/')[2]
+      resourceTags: resourceTags
+    }
+}
+
 //
 // chaos studio
 //
@@ -2043,3 +2153,12 @@ resource chaosaksexperiment 'Microsoft.Chaos/experiments@2022-10-01-preview' = {
 
 output cartsApiEndpoint string = 'https://${cartsapiaca.properties.configuration.ingress.fqdn}'
 output uiCdnEndpoint string = 'https://${cdnprofile_ui2endpoint.properties.hostName}'
+// JM+
+output productVmApiEndpoint string = productApiCname
+output cartVmApiEndpoint string = cartApiCname
+
+// from FD module
+output newFdWebEndpoint string = newFrontDoor.outputs.webEndpoint 
+output newFdimagesEndpoint string = newFrontDoor.outputs.imagesEndpoint 
+output newFdProdVmApiEndpoint string = newFrontDoor.outputs.VmProdApiEndpoint 
+output newFdCartVmApiEndpoint string = newFrontDoor.outputs.VmCartApiEndpoint 
