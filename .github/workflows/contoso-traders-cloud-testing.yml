@@ -441,8 +441,8 @@ jobs:
                         while read vm; do
                           name=$(echo $vm | jq -r '.Name')
                           resourceGroupName=$(echo $vm | jq -r '.ResourceGroupName')
-                          storageAccountKey = az storage account keys list --account-name '${{ env.UI_STORAGE_ACCOUNT_NAME }}${{ vars.SUFFIX }}'' --resource-group '${{ env.RESOURCE_GROUP_NAME }}${{ vars.SUFFIX }}' --query "[0].value" -o tsv
-                          az vm run-command invoke --name $name --resource-group $resourceGroupName --command-id RunPowerShellScript --scripts '${{ github.workspace }}/iac/scripts/BlobToIisCopy.ps1 -storageAccountName $storageAccountKey '
+                          storageAccountKey = az storage account keys list --account-name '${{ env.UI_STORAGE_ACCOUNT_NAME }}${{ vars.SUFFIX }}' --resource-group '${{ env.RESOURCE_GROUP_NAME }}${{ vars.SUFFIX }}' --query "[0].value" -o tsv
+                          az vm run-command invoke --name $name --resource-group $resourceGroupName --command-id RunPowerShellScript --scripts '${{ github.workspace }}/iac/scripts/BlobToIisCopy.ps1 -storageAccountName $storageAccountKey'
                         done    
       - name: purge ui cdn endpoint
         uses: azure/CLI@v1
