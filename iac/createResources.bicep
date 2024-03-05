@@ -646,7 +646,7 @@ resource profilesdbsrv 'Microsoft.Sql/servers@2022-05-01-preview' = if (!deployS
 //
 
 // aca environment
-resource cartsapiacaenv 'Microsoft.App/managedEnvironments@2022-06-01-preview' = {
+resource cartsapiacaenv 'Microsoft.App/managedEnvironments@2022-06-01-preview' = if (deployVmBasedApis != true) {
   name: cartsApiAcaEnvName
   location: resourceLocation
   tags: resourceTags
@@ -659,7 +659,7 @@ resource cartsapiacaenv 'Microsoft.App/managedEnvironments@2022-06-01-preview' =
 }
 
 // aca
-resource cartsapiaca 'Microsoft.App/containerApps@2022-06-01-preview' = {
+resource cartsapiaca 'Microsoft.App/containerApps@2022-06-01-preview' = if (deployVmBasedApis != true) {
   name: cartsApiAcaName
   location: resourceLocation
   tags: resourceTags
@@ -1351,7 +1351,7 @@ resource dashboard 'Microsoft.Portal/dashboards@2020-09-01-preview' = {
 // aks cluster
 //
 
-resource aks 'Microsoft.ContainerService/managedClusters@2022-10-02-preview' = {
+resource aks 'Microsoft.ContainerService/managedClusters@2022-10-02-preview' = if (deployVmBasedApis != true) {
   name: aksClusterName
   location: resourceLocation
   tags: resourceTags
@@ -1384,14 +1384,14 @@ resource aks 'Microsoft.ContainerService/managedClusters@2022-10-02-preview' = {
   }
 }
 
-resource aks_roledefinitionforchaosexp 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
+resource aks_roledefinitionforchaosexp 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = if (deployVmBasedApis != true) {
   scope: aks
   // This is the Azure Kubernetes Service Cluster Admin Role
   // See https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#azure-kubernetes-service-cluster-admin-role
   name: '0ab0b1a8-8aac-4efd-b8c2-3ee1fb270be8'
 }
 
-resource aks_roleassignmentforchaosexp 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+resource aks_roleassignmentforchaosexp 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (deployVmBasedApis != true) {
   scope: aks
   name: guid(aks.id, chaosaksexperiment.id, aks_roledefinitionforchaosexp.id)
   properties: {
