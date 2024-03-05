@@ -1491,12 +1491,12 @@ module vnetWebSubnetNsg './modules/createNsg.bicep' = if (deployPrivateEndpoints
       nsgName: '${vnetWebSubnetName}-nsg-${resourceLocation}'
       nsgRules: [ 
         {
-          name: 'AllowHTTPInboundFromFD'
+          name: 'AllowHTTPInbound'
           protocol: 'Tcp'
           sourcePortRange: '*'
           destinationPortRange: '80'
-          //sourceAddressPrefix: 'AzureFrontDoor.Frontend'
-          //destinationAddressPrefix: 'VirtualNetwork'
+          sourceAddressPrefix: '*'
+          destinationAddressPrefix: '*'
           access: 'Allow'
           priority: '100'
           direction: 'Inbound'
