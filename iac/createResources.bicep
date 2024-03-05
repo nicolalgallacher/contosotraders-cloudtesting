@@ -27,13 +27,18 @@ param prefix string = 'contosotraders'
 param prefixHyphenated string = 'contoso-traders'
 
 // sql
-param sqlServerHostName string = environment().suffixes.sqlServerHostname
+param sqlServerHostName string = deploySqlOnIaas ? '.${resourceLocation}.cloudapp.azure.com' : environment().suffixes.sqlServerHostname
+param trustServerCertificate bool = deploySqlOnIaas ? true : false
 
 // use param to conditionally deploy private endpoint resources
 param deployPrivateEndpoints bool = false
 
 // use param to conditionally deploy private endpoint resources
 param deployVmBasedApis bool = false
+
+// use param to conditionally deploy SQL on IAAS
+param deploySqlOnIaas bool = false
+
 
 // variables
 ////////////////////////////////////////////////////////////////////////////////
@@ -72,16 +77,18 @@ var productsApiSettingNameKeyVaultEndpoint = 'KeyVaultEndpoint'
 var productsApiSettingNameManagedIdentityClientId = 'ManagedIdentityClientId'
 
 // sql azure (products db)
-var productsDbServerName = '${prefixHyphenated}-products${suffix}'
+var productsDbServerName = '${prefix}-products${suffix}'
 var productsDbName = 'productsdb'
 var productsDbServerAdminLogin = 'localadmin'
 var productsDbServerAdminPassword = sqlPassword
 
 // sql azure (profiles db)
-var profilesDbServerName = '${prefixHyphenated}-profiles${suffix}'
+var profilesDbServerName = '${prefix}-profiles${suffix}'
 var profilesDbName = 'profilesdb'
 var profilesDbServerAdminLogin = 'localadmin'
 var profilesDbServerAdminPassword = sqlPassword
+
+
 
 // azure container app (carts api)
 var cartsApiAcaName = '${prefixHyphenated}-carts${suffix}'
@@ -171,8 +178,15 @@ var jumpboxNicName = '${prefixHyphenated}-jumpbox${suffix}'
 var jumpboxVmName = 'jumpboxvm'
 var jumpboxVmAdminLogin = 'localadmin'
 var jumpboxVmAdminPassword = sqlPassword
-var jumpboxVmShutdownSchduleName = 'shutdown-computevm-jumpboxvm'
+var jumpboxVmShutdownScheduleName = 'shutdown-computevm-jumpboxvm'
 var jumpboxVmShutdownScheduleTimezoneId = 'UTC'
+
+// sql vm
+var sqlVmPrefix = 'sqlvm' // this is different to the DbServerName variables as it needs to be shorter than 15 characters
+var sqlVmAdminLogin = 'localadmin'
+var sqlVmAdminPassword = sqlPassword
+var sqlVmShutdownScheduleName = 'shutdown-computevm-sqlvm'
+var sqlVmShutdownScheduleTimezoneId = 'UTC'
 
 // private dns zone
 var privateDnsZoneVnetLinkName = '${prefixHyphenated}-privatednszone-vnet-link${suffix}'
@@ -243,7 +257,7 @@ resource kv 'Microsoft.KeyVault/vaults@2022-07-01' = {
     tags: resourceTags
     properties: {
       contentType: 'connection string to the products db'
-      value: 'Server=tcp:${productsDbServerName}${sqlServerHostName},1433;Initial Catalog=${productsDbName};Persist Security Info=False;User ID=${productsDbServerAdminLogin};Password=${productsDbServerAdminPassword};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;'
+      value: 'Server=tcp:${productsDbServerName}${sqlServerHostName},1433;Initial Catalog=${productsDbName};Persist Security Info=False;User ID=${productsDbServerAdminLogin};Password=${productsDbServerAdminPassword};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=${trustServerCertificate};Connection Timeout=30;'
     }
   }
 
@@ -253,7 +267,7 @@ resource kv 'Microsoft.KeyVault/vaults@2022-07-01' = {
     tags: resourceTags
     properties: {
       contentType: 'connection string to the profiles db'
-      value: 'Server=tcp:${profilesDbServerName}${sqlServerHostName},1433;Initial Catalog=${profilesDbName};Persist Security Info=False;User ID=${profilesDbServerAdminLogin};Password=${profilesDbServerAdminPassword};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;'
+      value: 'Server=tcp:${profilesDbServerName}${sqlServerHostName},1433;Initial Catalog=${profilesDbName};Persist Security Info=False;User ID=${profilesDbServerAdminLogin};Password=${profilesDbServerAdminPassword};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=${trustServerCertificate};Connection Timeout=30;'
     }
   }
 
@@ -549,7 +563,7 @@ resource productsapiappsvc 'Microsoft.Web/sites@2022-03-01' = {
 //
 
 // sql azure server
-resource productsdbsrv 'Microsoft.Sql/servers@2022-05-01-preview' = {
+resource productsdbsrv 'Microsoft.Sql/servers@2022-05-01-preview' = if (!deploySqlOnIaas) {
   name: productsDbServerName
   location: resourceLocation
   tags: resourceTags
@@ -560,7 +574,7 @@ resource productsdbsrv 'Microsoft.Sql/servers@2022-05-01-preview' = {
   }
 
   // sql azure database
-  resource productsdbsrv_db 'databases' = {
+  resource productsdbsrv_db 'databases' =  {
     name: productsDbName
     location: resourceLocation
     tags: resourceTags
@@ -595,7 +609,7 @@ resource productsdbsrv 'Microsoft.Sql/servers@2022-05-01-preview' = {
 //
 
 // sql azure server
-resource profilesdbsrv 'Microsoft.Sql/servers@2022-05-01-preview' = {
+resource profilesdbsrv 'Microsoft.Sql/servers@2022-05-01-preview' = if (!deploySqlOnIaas) {
   name: profilesDbServerName
   location: resourceLocation
   tags: resourceTags
@@ -1506,7 +1520,19 @@ module vnetDBSubnetNsg './modules/createNsg.bicep' = if (deployPrivateEndpoints)
     params: {
       location: resourceLocation
       nsgName: '${vnetDBSubnetName}-nsg-${resourceLocation}'
-      nsgRules: []
+      nsgRules: [
+        {
+          name: 'AllowSQLServerInbound'
+          protocol: 'Tcp'
+          sourcePortRange: '*'
+          destinationPortRange: '1433'
+          sourceAddressPrefix: 'AzureCloud'
+          destinationAddressPrefix: 'virtualNetwork'
+          access: 'Allow'
+          priority: '100'
+          direction: 'Inbound'
+        }
+      ]
       resourceTags: resourceTags
     }
 }
@@ -1680,7 +1706,7 @@ resource jumpboxvm 'Microsoft.Compute/virtualMachines@2022-08-01' = if (deployPr
 
 // auto-shutdown schedule
 resource jumpboxvmschedule 'Microsoft.DevTestLab/schedules@2018-09-15' = if (deployPrivateEndpoints) {
-  name: jumpboxVmShutdownSchduleName
+  name: jumpboxVmShutdownScheduleName
   location: resourceLocation
   tags: resourceTags
   properties: {
@@ -1694,6 +1720,162 @@ resource jumpboxvmschedule 'Microsoft.DevTestLab/schedules@2018-09-15' = if (dep
     status: 'Enabled'
     taskType: 'ComputeVmShutdownTask'
     timeZoneId: jumpboxVmShutdownScheduleTimezoneId
+  }
+}
+
+//
+// SQL Servers
+//
+
+// Products DB
+module productsSqlServer './modules/createSqlVm.bicep' = if (deploySqlOnIaas) {
+  name: 'createProductsSqlVM'
+  params: {
+    location: resourceLocation
+    resourceTags: resourceTags
+    virtualMachineName: '${sqlVmPrefix}-products'
+    dnsLabel: productsDbServerName
+    adminUsername: sqlVmAdminLogin
+    adminPassword: sqlVmAdminPassword
+    existingSubnetName: vnetDBSubnetName
+    existingVirtualNetworkName: vnetName
+    existingVnetResourceGroup: resourceGroup().name
+  }
+}
+
+// auto-shutdown schedule
+resource productsSqlvmschedule 'Microsoft.DevTestLab/schedules@2018-09-15' = if (deploySqlOnIaas) {
+  name: '${sqlVmShutdownScheduleName}-products'
+  location: resourceLocation
+  tags: resourceTags
+  properties: {
+    targetResourceId: deploySqlOnIaas ? productsSqlServer.outputs.id : ''
+    dailyRecurrence: {
+      time: '2100'
+    }
+    notificationSettings: {
+      status: 'Disabled'
+    }
+    status: 'Enabled'
+    taskType: 'ComputeVmShutdownTask'
+    timeZoneId: sqlVmShutdownScheduleTimezoneId
+  }
+}
+
+// run script to create databases ./scripts/create-databases.ps1
+resource runScriptToCreateProductDatabase 'Microsoft.Resources/deploymentScripts@2020-10-01' = if (deploySqlOnIaas) {
+  name: 'RunScriptToCreateProductDatabase'
+  location: resourceLocation
+  kind: 'AzurePowerShell'
+  identity: {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${uistgacc_mi.id}': {}
+    }
+  }
+  dependsOn: [
+    // we need to ensure we wait for the role assignment to be deployed
+    roleAssignment
+  ]
+  properties: {
+    azPowerShellVersion: '3.0'
+    scriptContent: loadTextContent('./scripts/create-databases.ps1')
+    retentionInterval: 'PT4H'
+    environmentVariables: [
+      {
+        name: 'serverName'
+        value: productsSqlServer.outputs.publicIP
+      }
+      {
+        name: 'userName'
+        value: sqlVmAdminLogin
+      }
+      {
+        name: 'password'
+        value: sqlVmAdminPassword
+      }
+      {
+        name: 'databaseNames'
+        value: productsDbName
+      }
+      
+    ]
+  }
+}
+
+// Profiles DB
+module profilesSqlServer './modules/createSqlVm.bicep' = if (deploySqlOnIaas) {
+  name: 'createProfilesSqlVM'
+  params: {
+    location: resourceLocation
+    resourceTags: resourceTags
+    virtualMachineName: '${sqlVmPrefix}-profiles'
+    dnsLabel: profilesDbServerName
+    adminUsername: sqlVmAdminLogin
+    adminPassword: sqlVmAdminPassword
+    existingSubnetName: vnetDBSubnetName
+    existingVirtualNetworkName: vnetName
+    existingVnetResourceGroup: resourceGroup().name
+  }
+}
+
+// auto-shutdown schedule
+resource profilesSqlvmschedule 'Microsoft.DevTestLab/schedules@2018-09-15' = if (deploySqlOnIaas) {
+  name: '${sqlVmShutdownScheduleName}-profiles'
+  location: resourceLocation
+  tags: resourceTags
+  properties: {
+    targetResourceId: deploySqlOnIaas ? profilesSqlServer.outputs.id : ''
+    dailyRecurrence: {
+      time: '2100'
+    }
+    notificationSettings: {
+      status: 'Disabled'
+    }
+    status: 'Enabled'
+    taskType: 'ComputeVmShutdownTask'
+    timeZoneId: sqlVmShutdownScheduleTimezoneId
+  }
+}
+
+// run script to create databases ./scripts/create-databases.ps1
+resource runScriptToCreateProfileDatabase 'Microsoft.Resources/deploymentScripts@2020-10-01' = if (deploySqlOnIaas) {
+  name: 'RunScriptToCreateProfileDatabase'
+  location: resourceLocation
+  kind: 'AzurePowerShell'
+  identity: {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${uistgacc_mi.id}': {}
+    }
+  }
+  dependsOn: [
+    // we need to ensure we wait for the role assignment to be deployed
+    roleAssignment
+  ]
+  properties: {
+    azPowerShellVersion: '3.0'
+    scriptContent: loadTextContent('./scripts/create-databases.ps1')
+    retentionInterval: 'PT4H'
+    environmentVariables: [
+      {
+        name: 'serverName'
+        value: profilesSqlServer.outputs.publicIP
+      }
+      {
+        name: 'userName'
+        value: sqlVmAdminLogin
+      }
+      {
+        name: 'password'
+        value: sqlVmAdminPassword
+      }
+      {
+        name: 'databaseNames'
+        value: profilesDbName
+      }
+      
+    ]
   }
 }
 
