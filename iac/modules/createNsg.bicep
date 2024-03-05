@@ -15,7 +15,7 @@ resource nsg 'Microsoft.Network/networkSecurityGroups@2021-02-01' = {
           protocol: rule.protocol
           sourcePortRange: rule.sourcePortRange
           destinationPortRange: rule.destinationPortRange
-          sourceAddressPrefix: rule.sourceAddressPrefix
+          sourceAddressPrefix: rule.sourceAddressPrefix 
           destinationAddressPrefix: rule.destinationAddressPrefix
           access: rule.access
           priority: rule.priority
