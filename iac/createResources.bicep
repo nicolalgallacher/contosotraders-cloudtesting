@@ -282,12 +282,21 @@ resource kv 'Microsoft.KeyVault/vaults@2022-07-01' = {
   }
 
   // secret
-  resource kv_secretCartsApiEndpoint 'secrets' = {
+  resource kv_secretCartsApiEndpoint 'secrets' = if (deployVmBasedApis != true) {
     name: kvSecretNameCartsApiEndpoint
     tags: resourceTags
     properties: {
       contentType: 'endpoint url (fqdn) of the carts api'
       value: cartsapiaca.properties.configuration.ingress.fqdn
+    }
+  }
+
+  resource kv_secretCartsApiEndpointvm 'secrets' = if (deployVmBasedApis) {
+    name: kvSecretNameCartsApiEndpoint
+    tags: resourceTags
+    properties: {
+      contentType: 'endpoint url (fqdn) of the carts api'
+      value: newFrontDoor.outputs.VmCartApiEndpoint
     }
   }
 
@@ -2151,7 +2160,7 @@ resource chaosaksexperiment 'Microsoft.Chaos/experiments@2022-10-01-preview' = {
 // outputs
 ////////////////////////////////////////////////////////////////////////////////
 
-output cartsApiEndpoint string = 'https://${cartsapiaca.properties.configuration.ingress.fqdn}'
+output cartsApiEndpoint string = deployVmBasedApis ? 'https://${newFrontDoor.outputs.VmProdApiEndpoint}' : 'https://${cartsapiaca.properties.configuration.ingress.fqdn}'
 output uiCdnEndpoint string = 'https://${cdnprofile_ui2endpoint.properties.hostName}'
 // JM+
 output productVmApiEndpoint string = productApiCname
