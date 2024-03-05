@@ -374,13 +374,13 @@ resource kv 'Microsoft.KeyVault/vaults@2022-07-01' = {
             secrets: [ 'get', 'list' ]
           }
         }
-        {
-          tenantId: tenantId
-          objectId: aks.properties.identityProfile.kubeletidentity.objectId
-          permissions: {
-            secrets: [ 'get', 'list' ]
-          }
-        }
+        // { JM- removed as not needed
+        //   tenantId: tenantId
+        //   objectId: aks.properties.identityProfile.kubeletidentity.objectId
+        //   permissions: {
+        //     secrets: [ 'get', 'list' ]
+        //   }
+        // }
       ]
     }
   }
