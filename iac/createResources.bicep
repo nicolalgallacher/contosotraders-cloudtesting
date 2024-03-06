@@ -1404,10 +1404,10 @@ resource aks_roledefinitionforchaosexp 'Microsoft.Authorization/roleDefinitions@
 
 resource aks_roleassignmentforchaosexp 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (!deployVmBasedApis) {
   scope: aks
-  name: ((!deployVmBasedApis) ? guid(aks.id, chaosaksexperiment.id, aks_roledefinitionforchaosexp.id) : '')
+  name: ((!deployVmBasedApis) ? guid(aks.id, chaosaksexperiment.id, aks_roledefinitionforchaosexp.id) : 'noname')
   properties: {
     roleDefinitionId: aks_roledefinitionforchaosexp.id
-    principalId: ((!deployVmBasedApis) ? chaosaksexperiment.identity.principalId : '' )
+    principalId: ((!deployVmBasedApis) ? chaosaksexperiment.identity.principalId : '1234' )
     principalType: 'ServicePrincipal'
   }
 }
