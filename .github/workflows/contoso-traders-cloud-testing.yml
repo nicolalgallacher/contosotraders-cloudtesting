@@ -596,7 +596,7 @@ jobs:
             ]
 
   load-tests-carts-internal-api:
-    if: ${{ vars.DEPLOYPRIVATEENDPOINTS == 'true' }}
+    if: ${{ vars.DEPLOYPRIVATEENDPOINTS == 'true' && vars.DEPLOYVMBASEDAPIS == 'false' }}
     needs: [provision, playwright-tests-ui]
     runs-on: ubuntu-22.04
     concurrency:
