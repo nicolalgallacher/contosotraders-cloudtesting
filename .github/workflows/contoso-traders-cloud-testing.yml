@@ -435,7 +435,7 @@ jobs:
         uses: azure/CLI@v1
         with:
           inlineScript: |
-                      az vm list --resource-group ${{ env.RESOURCE_GROUP_NAME }}${{ vars.SUFFIX }} --show-details --query "[?powerState=='VM running' && storageProfile.osDisk.osType=='Windows'].{Name:name, ResourceGroupName:resourceGroup}" -o json | \
+                      az vm list --resource-group ${{ env.RESOURCE_GROUP_NAME }}${{ vars.SUFFIX }} --show-details --query "[?powerState=='VM running' && storageProfile.osDisk.osType=='Windows' && contains(name, 'iis')].{Name:name, ResourceGroupName:resourceGroup}" -o json | \
                       jq -c '.[]' | \
           
                         while read vm; do
