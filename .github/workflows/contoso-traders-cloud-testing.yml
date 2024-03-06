@@ -227,6 +227,7 @@ jobs:
       - name: docker push (to acr)
         run: docker push --all-tags ${{ env.ACR_NAME }}${{ vars.SUFFIX }}.azurecr.io/${{ env.CARTS_ACR_REPOSITORY_NAME }}
       - name: deploy to aca
+        if: ${{ vars.DEPLOYPRIVATEENDPOINTS != 'true' }}
         uses: azure/CLI@v1
         with:
           inlineScript: |
@@ -301,8 +302,10 @@ jobs:
          AZURE_SUBSCRIPTION_ID: ${{ env.subscriptionId }}
       
       - name: setup kubectl
+        if: ${{ vars.DEPLOYVMBASEDAPIS == 'false' }}
         uses: azure/setup-kubectl@v3
       - name: create kubernetes secret (acr password)
+        if: ${{ vars.DEPLOYVMBASEDAPIS == 'false' }}
         uses: Azure/k8s-create-secret@v4
         with:
           secret-name: ${{ env.AKS_SECRET_NAME_ACR_PASSWORD }}
@@ -311,18 +314,21 @@ jobs:
           container-registry-password: ${{ steps.extract-acr-password.outputs.acrPassword }}
       
       - name: create kubernetes secret (kv endpoint)
+        if: ${{ vars.DEPLOYVMBASEDAPIS == 'false' }}
         uses: Azure/k8s-create-secret@v4
         with:
           secret-type: "generic"
           secret-name: ${{ env.AKS_SECRET_NAME_KV_ENDPOINT }}
           string-data: '{ "${{ env.AKS_SECRET_NAME_KV_ENDPOINT }}" : "https://${{ env.KV_NAME }}${{ vars.SUFFIX }}.vault.azure.net/" }'
       - name: create kubernetes secret (managed identity client id)
+        if: ${{ vars.DEPLOYVMBASEDAPIS == 'false' }}
         uses: Azure/k8s-create-secret@v4
         with:
           secret-type: "generic"
           secret-name: ${{ env.AKS_SECRET_NAME_MI_CLIENTID }}
           string-data: '{ "${{ env.AKS_SECRET_NAME_MI_CLIENTID }}" : "${{ steps.get-managedIdentityClientId.outputs.managedIdentityClientId }}" }'
       - name: substitute tokens in deployment manifest
+        if: ${{ vars.DEPLOYVMBASEDAPIS == 'false' }}
         uses: cschleiden/replace-tokens@v1.2
         with:
           tokenPrefix: "{"
@@ -334,10 +340,12 @@ jobs:
           AKS_CPU_LIMIT: ${{ env.AKS_CPU_LIMIT }}
           AKS_MEMORY_LIMIT: ${{ env.AKS_MEMORY_LIMIT }}
       - name: lint deployment manifest
+        if: ${{ vars.DEPLOYVMBASEDAPIS == 'false' }}
         uses: azure/k8s-lint@v2.0
         with:
           manifests: ./src/ContosoTraders.Api.Products/Manifests/Deployment.yaml
       - name: apply deployment manifest
+        if: ${{ vars.DEPLOYVMBASEDAPIS == 'false' }}
         uses: Azure/k8s-deploy@v4
         with:
           manifests: ./src/ContosoTraders.Api.Products/Manifests/Deployment.yaml
@@ -345,6 +353,7 @@ jobs:
           imagepullsecrets: ${{ env.AKS_SECRET_NAME_ACR_PASSWORD }}
           force: true
       - name: apply service manifest
+        if: ${{ vars.DEPLOYVMBASEDAPIS == 'false' }}
         uses: Azure/k8s-deploy@v4
         with:
           pull-images: false
@@ -352,12 +361,14 @@ jobs:
           force: true
       # setup chaos mesh
       - name: apply namespace manifest (chaos-testing)
+        if: ${{ vars.DEPLOYVMBASEDAPIS == 'false' }}
         uses: Azure/k8s-deploy@v4
         with:
           pull-images: false
           manifests: ./src/ContosoTraders.Api.Products/Manifests/NamespaceChaosTesting.yaml
           force: true
       - name: setup chaos mesh
+        if: ${{ vars.DEPLOYVMBASEDAPIS == 'false' }}
         run: |
           az aks get-credentials --resource-group ${{ env.RESOURCE_GROUP_NAME }}${{ vars.SUFFIX }} --name ${{ env.AKS_CLUSTER_NAME }}${{ vars.SUFFIX }}
           ${{ steps.install-helm.outputs.helm-path }} repo add chaos-mesh https://charts.chaos-mesh.org
@@ -365,6 +376,7 @@ jobs:
           ${{ steps.install-helm.outputs.helm-path }} upgrade --install chaos-mesh chaos-mesh/chaos-mesh --namespace=chaos-testing --set chaosDaemon.runtime=containerd --set chaosDaemon.socketPath=/run/containerd/containerd.sock
       # create the ingress controller
       - name: create ingress controller
+        if: ${{ vars.DEPLOYVMBASEDAPIS == 'false' }}
         run: |
           az aks get-credentials --resource-group ${{ env.RESOURCE_GROUP_NAME }}${{ vars.SUFFIX }} --name ${{ env.AKS_CLUSTER_NAME }}${{ vars.SUFFIX }}
           ${{ steps.install-helm.outputs.helm-path }} repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
@@ -376,11 +388,13 @@ jobs:
             --set controller.admissionWebhooks.patch.nodeSelector."kubernetes\.io/os"=linux \
             --set controller.service.externalTrafficPolicy=Local
       - name: set dns label on public ip
+        if: ${{ vars.DEPLOYVMBASEDAPIS == 'false' }}
         uses: azure/CLI@v1
         with:
           inlineScript: az network public-ip update --dns-name ${{ env.AKS_DNS_LABEL }}${{ vars.SUFFIX }} -g ${{ env.AKS_NODES_RESOURCE_GROUP_NAME }}${{ vars.SUFFIX }} -n $(az network public-ip list --query "[?starts_with(name,'kubernetes-') ].name" -o tsv -g ${{ env.AKS_NODES_RESOURCE_GROUP_NAME }}${{ vars.SUFFIX }})
       # hack: extract the full fqdn / dns label of the aks app's public IP address
       - name: get aks-fqdn
+        if: ${{ vars.DEPLOYVMBASEDAPIS == 'false' }}
         uses: azure/CLI@v1
         id: get-aks-fqdn
         with:
@@ -388,25 +402,30 @@ jobs:
           inlineScript: echo "aksFqdn"="$(az network public-ip list --query "[?starts_with(name,'kubernetes-') ].dnsSettings.fqdn" -o tsv -g ${{ env.AKS_NODES_RESOURCE_GROUP_NAME }}${{ vars.SUFFIX }})" >> $GITHUB_OUTPUT
       # install cert-manager
       - name: apply namespace manifest (cert-manager)
+        if: ${{ vars.DEPLOYVMBASEDAPIS == 'false' }}
         uses: Azure/k8s-deploy@v4
         with:
           pull-images: false
           manifests: ./src/ContosoTraders.Api.Products/Manifests/NamespaceCertManager.yaml
           force: true
       - name: install cert-manager
+        if: ${{ vars.DEPLOYVMBASEDAPIS == 'false' }}
         run: |
           az aks get-credentials --resource-group ${{ env.RESOURCE_GROUP_NAME }}${{ vars.SUFFIX }} --name ${{ env.AKS_CLUSTER_NAME }}${{ vars.SUFFIX }}
           kubectl apply --validate=false -f https://github.com/cert-manager/cert-manager/releases/download/v1.9.1/cert-manager.yaml
       - name: sleep for 30 seconds
+        if: ${{ vars.DEPLOYVMBASEDAPIS == 'false' }}
         run: sleep 30s
         shell: bash
       - name: apply clusterIssuer manifest
+        if: ${{ vars.DEPLOYVMBASEDAPIS == 'false' }}
         uses: Azure/k8s-deploy@v4
         with:
           pull-images: false
           manifests: ./src/ContosoTraders.Api.Products/Manifests/ClusterIssuer.yaml
           force: true
       - name: substitute tokens in certificate manifest
+        if: ${{ vars.DEPLOYVMBASEDAPIS == 'false' }}
         uses: cschleiden/replace-tokens@v1.2
         with:
           tokenPrefix: "{"
@@ -415,12 +434,14 @@ jobs:
         env:
           AKS_FQDN: ${{ steps.get-aks-fqdn.outputs.aksFqdn }}
       - name: apply certificate manifest
+        if: ${{ vars.DEPLOYVMBASEDAPIS == 'false' }}
         uses: Azure/k8s-deploy@v4
         with:
           pull-images: false
           manifests: ./src/ContosoTraders.Api.Products/Manifests/Certificate.yaml
           force: true
       - name: substitute tokens in ingress manifest
+        if: ${{ vars.DEPLOYVMBASEDAPIS == 'false' }}
         uses: cschleiden/replace-tokens@v1.2
         with:
           tokenPrefix: "{"
@@ -429,22 +450,26 @@ jobs:
         env:
           AKS_FQDN: ${{ steps.get-aks-fqdn.outputs.aksFqdn }}
       - name: apply ingress manifest
+        if: ${{ vars.DEPLOYVMBASEDAPIS == 'false' }}
         uses: Azure/k8s-deploy@v4
         with:
           pull-images: false
           manifests: ./src/ContosoTraders.Api.Products/Manifests/Ingress.yaml
           force: true
       - name: apply clusterRole manifest
+        if: ${{ vars.DEPLOYVMBASEDAPIS == 'false' }}
         uses: Azure/k8s-deploy@v4
         with:
           pull-images: false
           manifests: ./src/ContosoTraders.Api.Products/Manifests/ClusterRole.yaml
           force: true
-      - name: set productsApiEndpoint in kv
+      - name: set productsApiEndpoint in kv 
+        if: ${{ vars.DEPLOYVMBASEDAPIS == 'false' }}
         uses: azure/CLI@v1
         with:
           inlineScript: az keyvault secret set --vault-name ${{ env.KV_NAME }}${{ vars.SUFFIX }} --name productsApiEndpoint --value ${{ steps.get-aks-fqdn.outputs.aksFqdn }} --description "endpoint url (fqdn) of the products api"
       - name: get products api endpoint
+        if: ${{ vars.DEPLOYVMBASEDAPIS == 'false' }}
         uses: azure/CLI@v1
         id: get-productsApiEndpoint
         with:
