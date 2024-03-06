@@ -2161,7 +2161,8 @@ resource chaosaksexperiment 'Microsoft.Chaos/experiments@2022-10-01-preview' = i
 // outputs
 ////////////////////////////////////////////////////////////////////////////////
 
-output cartsApiEndpoint string = deployVmBasedApis ? 'https://${newFrontDoor.outputs.VmProdApiEndpoint}' : 'https://${cartsapiaca.properties.configuration.ingress.fqdn}'
+//JM- output cartsApiEndpoint string = deployVmBasedApis ? 'https://${newFrontDoor.outputs.VmProdApiEndpoint}' : 'https://${cartsapiaca.properties.configuration.ingress.fqdn}'
+output cartsApiEndpoint string = 'https://${newFrontDoor.outputs.VmProdApiEndpoint}' 
 output uiCdnEndpoint string = 'https://${cdnprofile_ui2endpoint.properties.hostName}'
 // JM+
 output productVmApiEndpoint string = productApiCname
