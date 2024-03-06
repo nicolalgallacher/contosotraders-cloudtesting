@@ -535,6 +535,7 @@ jobs:
           inlineScript: echo UI CDN endpoint accessible at https://$(az keyvault secret show --vault-name ${{ env.KV_NAME }}${{ vars.SUFFIX }} --name uiCdnEndpoint --query value -o tsv)
 
   load-tests-with-chaos-products-api:
+    if: ${{ vars.DEPLOYVMBASEDAPIS == 'false' }}
     needs: [provision, playwright-tests-ui]
     runs-on: ubuntu-22.04
     concurrency:
