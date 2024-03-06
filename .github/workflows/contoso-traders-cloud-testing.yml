@@ -216,6 +216,7 @@ jobs:
           username: ${{ env.ACR_NAME }}${{ vars.SUFFIX }}
           password: ${{ steps.extract-acr-password.outputs.acrPassword }}
       - name: set aks context
+        if: ${{ vars.DEPLOYVMBASEDAPIS == 'false' }}
         uses: azure/aks-set-context@v3
         with:
           resource-group: ${{ env.RESOURCE_GROUP_NAME }}${{ vars.SUFFIX }}
