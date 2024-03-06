@@ -287,7 +287,7 @@ resource kv 'Microsoft.KeyVault/vaults@2022-07-01' = {
     tags: resourceTags
     properties: {
       contentType: 'endpoint url (fqdn) of the carts api'
-      value: cartsapiaca.properties.configuration.ingress.fqdn
+      value: !deployVmBasedApis ? cartsapiaca.properties.configuration.ingress.fqdn : ''
     }
   }
 
