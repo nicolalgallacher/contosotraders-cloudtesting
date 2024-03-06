@@ -247,7 +247,7 @@ resource kv 'Microsoft.KeyVault/vaults@2022-07-01' = {
     tags: resourceTags
     properties: {
       contentType: 'endpoint url (fqdn) of the products api'
-      value: 'placeholder' // Note: This will be set via github worfklow
+      value: deployVmBasedApis ? newFrontDoor.outputs.VmProdApiEndpoint : ''
     }
   }
 

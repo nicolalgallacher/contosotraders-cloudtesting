@@ -466,6 +466,7 @@ jobs:
           manifests: ./src/ContosoTraders.Api.Products/Manifests/ClusterRole.yaml
           force: true
       - name: set productsApiEndpoint in kv 
+        if: ${{ vars.DEPLOYVMBASEDAPIS == 'false' }}
         uses: azure/CLI@v1
         with:
           inlineScript: az keyvault secret set --vault-name ${{ env.KV_NAME }}${{ vars.SUFFIX }} --name productsApiEndpoint --value ${{ steps.get-aks-fqdn.outputs.aksFqdn }} --description "endpoint url (fqdn) of the products api"
