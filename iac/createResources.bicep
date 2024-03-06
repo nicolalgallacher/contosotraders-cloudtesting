@@ -281,13 +281,23 @@ resource kv 'Microsoft.KeyVault/vaults@2022-07-01' = {
     }
   }
 
-  // secret
-  resource kv_secretCartsApiEndpoint 'secrets' = {
+  // secret 
+  resource kv_secretCartsApiEndpoint 'secrets' = if (!deployVmBasedApis) {
     name: kvSecretNameCartsApiEndpoint
     tags: resourceTags
     properties: {
       contentType: 'endpoint url (fqdn) of the carts api'
-      value: cartsapiaca.properties.configuration.ingress.fqdn
+      value: !deployVmBasedApis ? cartsapiaca.properties.configuration.ingress.fqdn : ''
+    }
+  }
+
+  // secret - different for VM based APIs
+  resource kv_secretCartsApiEndpointvm 'secrets' = if (deployVmBasedApis) {
+    name: kvSecretNameCartsApiEndpoint
+    tags: resourceTags
+    properties: {
+      contentType: 'endpoint url (fqdn) of the carts api'
+      value: newFrontDoor.outputs.VmCartApiEndpoint
     }
   }
 
@@ -365,13 +375,13 @@ resource kv 'Microsoft.KeyVault/vaults@2022-07-01' = {
             secrets: [ 'get', 'list' ]
           }
         }
-        {
-          tenantId: tenantId
-          objectId: aks.properties.identityProfile.kubeletidentity.objectId
-          permissions: {
-            secrets: [ 'get', 'list' ]
-          }
-        }
+        // { JM- removed as not needed
+        //   tenantId: tenantId
+        //   objectId: aks.properties.identityProfile.kubeletidentity.objectId
+        //   permissions: {
+        //     secrets: [ 'get', 'list' ]
+        //   }
+        // }
       ]
     }
   }
@@ -646,7 +656,7 @@ resource profilesdbsrv 'Microsoft.Sql/servers@2022-05-01-preview' = if (!deployS
 //
 
 // aca environment
-resource cartsapiacaenv 'Microsoft.App/managedEnvironments@2022-06-01-preview' = {
+resource cartsapiacaenv 'Microsoft.App/managedEnvironments@2022-06-01-preview' = if (!deployVmBasedApis) {
   name: cartsApiAcaEnvName
   location: resourceLocation
   tags: resourceTags
@@ -659,7 +669,7 @@ resource cartsapiacaenv 'Microsoft.App/managedEnvironments@2022-06-01-preview' =
 }
 
 // aca
-resource cartsapiaca 'Microsoft.App/containerApps@2022-06-01-preview' = {
+resource cartsapiaca 'Microsoft.App/containerApps@2022-06-01-preview' = if (!deployVmBasedApis) {
   name: cartsApiAcaName
   location: resourceLocation
   tags: resourceTags
@@ -1351,7 +1361,7 @@ resource dashboard 'Microsoft.Portal/dashboards@2020-09-01-preview' = {
 // aks cluster
 //
 
-resource aks 'Microsoft.ContainerService/managedClusters@2022-10-02-preview' = {
+resource aks 'Microsoft.ContainerService/managedClusters@2022-10-02-preview' = if (!deployVmBasedApis) {
   name: aksClusterName
   location: resourceLocation
   tags: resourceTags
@@ -1384,19 +1394,20 @@ resource aks 'Microsoft.ContainerService/managedClusters@2022-10-02-preview' = {
   }
 }
 
-resource aks_roledefinitionforchaosexp 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
+
+resource aks_roledefinitionforchaosexp 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing =  {
   scope: aks
   // This is the Azure Kubernetes Service Cluster Admin Role
   // See https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#azure-kubernetes-service-cluster-admin-role
   name: '0ab0b1a8-8aac-4efd-b8c2-3ee1fb270be8'
 }
 
-resource aks_roleassignmentforchaosexp 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+resource aks_roleassignmentforchaosexp 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (!deployVmBasedApis) {
   scope: aks
-  name: guid(aks.id, chaosaksexperiment.id, aks_roledefinitionforchaosexp.id)
+  name: ((!deployVmBasedApis) ? guid(aks.id, chaosaksexperiment.id, aks_roledefinitionforchaosexp.id) : 'noname')
   properties: {
     roleDefinitionId: aks_roledefinitionforchaosexp.id
-    principalId: chaosaksexperiment.identity.principalId
+    principalId: ((!deployVmBasedApis) ? chaosaksexperiment.identity.principalId : '1234' )
     principalType: 'ServicePrincipal'
   }
 }
@@ -2086,8 +2097,9 @@ resource chaoskvexperiment 'Microsoft.Chaos/experiments@2022-10-01-preview' = {
   }
 }
 
+
 // target: aks
-resource chaosakstarget 'Microsoft.Chaos/targets@2022-10-01-preview' = {
+resource chaosakstarget 'Microsoft.Chaos/targets@2022-10-01-preview' = if (!deployVmBasedApis) {
   name: 'Microsoft-AzureKubernetesServiceChaosMesh'
   location: resourceLocation
   scope: aks
@@ -2100,7 +2112,7 @@ resource chaosakstarget 'Microsoft.Chaos/targets@2022-10-01-preview' = {
 }
 
 // chaos experiment: aks (chaos mesh)
-resource chaosaksexperiment 'Microsoft.Chaos/experiments@2022-10-01-preview' = {
+resource chaosaksexperiment 'Microsoft.Chaos/experiments@2022-10-01-preview' = if (!deployVmBasedApis) {
   name: chaosAksExperimentName
   location: resourceLocation
   tags: resourceTags
@@ -2151,7 +2163,8 @@ resource chaosaksexperiment 'Microsoft.Chaos/experiments@2022-10-01-preview' = {
 // outputs
 ////////////////////////////////////////////////////////////////////////////////
 
-output cartsApiEndpoint string = 'https://${cartsapiaca.properties.configuration.ingress.fqdn}'
+output cartsApiEndpoint string = deployVmBasedApis ? 'https://${newFrontDoor.outputs.VmProdApiEndpoint}' : 'https://${cartsapiaca.properties.configuration.ingress.fqdn}'
+//JM- output cartsApiEndpoint string = 'https://${newFrontDoor.outputs.VmProdApiEndpoint}' 
 output uiCdnEndpoint string = 'https://${cdnprofile_ui2endpoint.properties.hostName}'
 // JM+
 output productVmApiEndpoint string = productApiCname

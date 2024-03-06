@@ -1,0 +1,6 @@
+### call the product API
+
+GET https://prodapiendpoint-e3hse2d2gdhwedae.b02.azurefd.net/v1/products?type=laptop
+
+### cal the VM product API
+GET http://contoso-traders-prodapijjm.westeurope.cloudapp.azure.com/v1/products?type=laptop
