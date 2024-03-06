@@ -281,8 +281,8 @@ resource kv 'Microsoft.KeyVault/vaults@2022-07-01' = {
     }
   }
 
-  // secret
-  resource kv_secretCartsApiEndpoint 'secrets' = if (deployVmBasedApis != true) {
+  // secret 
+  resource kv_secretCartsApiEndpoint 'secrets' = if (!deployVmBasedApis) {
     name: kvSecretNameCartsApiEndpoint
     tags: resourceTags
     properties: {
@@ -291,6 +291,7 @@ resource kv 'Microsoft.KeyVault/vaults@2022-07-01' = {
     }
   }
 
+  // secret - different for VM based APIs
   resource kv_secretCartsApiEndpointvm 'secrets' = if (deployVmBasedApis) {
     name: kvSecretNameCartsApiEndpoint
     tags: resourceTags
@@ -655,7 +656,7 @@ resource profilesdbsrv 'Microsoft.Sql/servers@2022-05-01-preview' = if (!deployS
 //
 
 // aca environment
-resource cartsapiacaenv 'Microsoft.App/managedEnvironments@2022-06-01-preview' = if (deployVmBasedApis != true) {
+resource cartsapiacaenv 'Microsoft.App/managedEnvironments@2022-06-01-preview' = if (!deployVmBasedApis) {
   name: cartsApiAcaEnvName
   location: resourceLocation
   tags: resourceTags
@@ -668,7 +669,7 @@ resource cartsapiacaenv 'Microsoft.App/managedEnvironments@2022-06-01-preview' =
 }
 
 // aca
-resource cartsapiaca 'Microsoft.App/containerApps@2022-06-01-preview' = if (deployVmBasedApis != true) {
+resource cartsapiaca 'Microsoft.App/containerApps@2022-06-01-preview' = if (!deployVmBasedApis) {
   name: cartsApiAcaName
   location: resourceLocation
   tags: resourceTags
@@ -1360,7 +1361,7 @@ resource dashboard 'Microsoft.Portal/dashboards@2020-09-01-preview' = {
 // aks cluster
 //
 
-resource aks 'Microsoft.ContainerService/managedClusters@2022-10-02-preview' = if (deployVmBasedApis != true) {
+resource aks 'Microsoft.ContainerService/managedClusters@2022-10-02-preview' = if (!deployVmBasedApis) {
   name: aksClusterName
   location: resourceLocation
   tags: resourceTags
