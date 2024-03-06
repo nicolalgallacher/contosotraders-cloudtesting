@@ -1394,6 +1394,7 @@ resource aks 'Microsoft.ContainerService/managedClusters@2022-10-02-preview' = i
   }
 }
 
+/*JM- 
 resource aks_roledefinitionforchaosexp 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = if (!deployVmBasedApis) {
   scope: aks
   // This is the Azure Kubernetes Service Cluster Admin Role
@@ -1410,7 +1411,7 @@ resource aks_roleassignmentforchaosexp 'Microsoft.Authorization/roleAssignments@
     principalType: 'ServicePrincipal'
   }
 }
-
+*/
 //
 // virtual network
 //
