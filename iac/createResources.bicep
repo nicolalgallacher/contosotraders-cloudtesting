@@ -1394,8 +1394,8 @@ resource aks 'Microsoft.ContainerService/managedClusters@2022-10-02-preview' = i
   }
 }
 
-/*JM- 
-resource aks_roledefinitionforchaosexp 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = if (!deployVmBasedApis) {
+
+resource aks_roledefinitionforchaosexp 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing =  {
   scope: aks
   // This is the Azure Kubernetes Service Cluster Admin Role
   // See https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#azure-kubernetes-service-cluster-admin-role
@@ -1404,14 +1404,14 @@ resource aks_roledefinitionforchaosexp 'Microsoft.Authorization/roleDefinitions@
 
 resource aks_roleassignmentforchaosexp 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (!deployVmBasedApis) {
   scope: aks
-  name: guid(aks.id, chaosaksexperiment.id, aks_roledefinitionforchaosexp.id)
+  name: ((!deployVmBasedApis) ? guid(aks.id, chaosaksexperiment.id, aks_roledefinitionforchaosexp.id) : '')
   properties: {
     roleDefinitionId: aks_roledefinitionforchaosexp.id
-    principalId: chaosaksexperiment.identity.principalId
+    principalId: ((!deployVmBasedApis) ? chaosaksexperiment.identity.principalId : '' )
     principalType: 'ServicePrincipal'
   }
 }
-*/
+
 //
 // virtual network
 //
@@ -2097,7 +2097,7 @@ resource chaoskvexperiment 'Microsoft.Chaos/experiments@2022-10-01-preview' = {
   }
 }
 
-/*
+
 // target: aks
 resource chaosakstarget 'Microsoft.Chaos/targets@2022-10-01-preview' = if (!deployVmBasedApis) {
   name: 'Microsoft-AzureKubernetesServiceChaosMesh'
@@ -2159,7 +2159,7 @@ resource chaosaksexperiment 'Microsoft.Chaos/experiments@2022-10-01-preview' = i
     ]
   }
 }
-*/
+
 // outputs
 ////////////////////////////////////////////////////////////////////////////////
 
