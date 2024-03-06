@@ -1393,14 +1393,14 @@ resource aks 'Microsoft.ContainerService/managedClusters@2022-10-02-preview' = i
   }
 }
 
-resource aks_roledefinitionforchaosexp 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = if (deployVmBasedApis != true) {
+resource aks_roledefinitionforchaosexp 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = if (!deployVmBasedApis) {
   scope: aks
   // This is the Azure Kubernetes Service Cluster Admin Role
   // See https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#azure-kubernetes-service-cluster-admin-role
   name: '0ab0b1a8-8aac-4efd-b8c2-3ee1fb270be8'
 }
 
-resource aks_roleassignmentforchaosexp 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (deployVmBasedApis != true) {
+resource aks_roleassignmentforchaosexp 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (!deployVmBasedApis) {
   scope: aks
   name: guid(aks.id, chaosaksexperiment.id, aks_roledefinitionforchaosexp.id)
   properties: {
@@ -2096,7 +2096,7 @@ resource chaoskvexperiment 'Microsoft.Chaos/experiments@2022-10-01-preview' = {
 }
 
 // target: aks
-resource chaosakstarget 'Microsoft.Chaos/targets@2022-10-01-preview' = if (deployVmBasedApis != true) {
+resource chaosakstarget 'Microsoft.Chaos/targets@2022-10-01-preview' = if (!deployVmBasedApis) {
   name: 'Microsoft-AzureKubernetesServiceChaosMesh'
   location: resourceLocation
   scope: aks
@@ -2109,7 +2109,7 @@ resource chaosakstarget 'Microsoft.Chaos/targets@2022-10-01-preview' = if (deplo
 }
 
 // chaos experiment: aks (chaos mesh)
-resource chaosaksexperiment 'Microsoft.Chaos/experiments@2022-10-01-preview' = if (deployVmBasedApis != true) {
+resource chaosaksexperiment 'Microsoft.Chaos/experiments@2022-10-01-preview' = if (!deployVmBasedApis) {
   name: chaosAksExperimentName
   location: resourceLocation
   tags: resourceTags
