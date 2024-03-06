@@ -442,7 +442,7 @@ jobs:
                           name=$(echo $vm | jq -r '.Name')
                           resourceGroupName=$(echo $vm | jq -r '.ResourceGroupName')
                           storageAccountKey=$(az storage account keys list --account-name '${{ env.UI_STORAGE_ACCOUNT_NAME }}${{ vars.SUFFIX }}' --resource-group '${{ env.RESOURCE_GROUP_NAME }}${{ vars.SUFFIX }}' --query "[0].value" -o tsv)
-                          az vm run-command create --name $name --resource-group $resourceGroupName --vm-name $name --script-uri 'https://github.com/${{ github.repository }}/tree/iis-testing/iac/scripts/BlobToIisCopy.ps1' --parameters storageAccountName=$storageAccountKey   
+                          az vm run-command create --name $name --resource-group $resourceGroupName --vm-name $name --script-uri 'https://github.com/${{ github.repository }}/tree/iis-testing/iac/scripts/BlobToIisCopy.ps1' --parameters storageAccountKey=$storageAccountKey   
                         done    
       - name: purge ui cdn endpoint
         uses: azure/CLI@v1
