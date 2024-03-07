@@ -431,7 +431,7 @@ jobs:
         uses: azure/CLI@v1
         with:  
           inlineScript: az storage blob sync --account-name '${{ env.UI_STORAGE_ACCOUNT_NAME }}${{ vars.SUFFIX }}' -c '$web' -s 'src/ContosoTraders.Ui.Website/build'
-      - name: IIS Copy # IIS 
+      - name: IIS Copy # IIS / Script needs to be in storage account for custom extension 
         uses: azure/CLI@v1
         with:
           inlineScript: |
@@ -443,10 +443,12 @@ jobs:
                           resourceGroupName=$(echo $vm | jq -r '.ResourceGroupName')
                           storageAccountKey=$(az storage account keys list --account-name '${{ env.UI_STORAGE_ACCOUNT_NAME }}${{ vars.SUFFIX }}' --resource-group '${{ env.RESOURCE_GROUP_NAME }}${{ vars.SUFFIX }}' --query "[0].value" -o tsv)
                         
-                          az vm extension set --resource-group contoso-traders-rgngall --vm-name vmiis-0 --name CustomScriptExtension \
+                          az vm extension set \
+                          --name CustomScriptExtension \
                           --publisher Microsoft.Compute \
-                          --settings '{"fileUris":["https://github.com/nicolalgallacher/contosotraders-cloudtesting/blob/iis-testing/iac/scripts/BlobToIisCopy.ps1"]}' \
-                          --protected-settings '{"commandToExecute":"powershell -ExecutionPolicy Unrestricted -File BlobToIisCopy.ps1 -storageAccountKey G4Z0fwm8NYT94363GJ5Bh57lt1jHmFrEFchBKDGmOL5thXpg5nSrzsMYzSuorDPFdMVYvKuUm2WG+AStQdDcjA=="}'
+                          --vm-name $name \
+                          --resource-group $resourceGroupName \
+                          --settings '{"fileUris":["https://raw.githubusercontent.com/nicolalgallacher/contosotraders-cloudtesting/iis-testing/iac/scripts/BlobToIisCopy.ps1"],"commandToExecute":".\BlobToIisCopy.ps1 -storageAccountKey "$storageAccountKey"}' 
                         done    
       - name: purge ui cdn endpoint
         uses: azure/CLI@v1
