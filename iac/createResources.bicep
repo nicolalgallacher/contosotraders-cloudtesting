@@ -294,15 +294,15 @@ resource kv 'Microsoft.KeyVault/vaults@2022-07-01' = {
     }
   }
 
-  // secret
-  resource kv_secretCartsInternalApiEndpoint 'secrets' = if (deployPrivateEndpoints) {
-    name: kvSecretNameCartsInternalApiEndpoint
-    tags: resourceTags
-    properties: {
-      contentType: 'endpoint url (fqdn) of the (internal) carts api'
-      value: deployPrivateEndpoints ? cartsinternalapiaca.properties.configuration.ingress.fqdn : ''
-    }
-  }
+  // // secret
+  // resource kv_secretCartsInternalApiEndpoint 'secrets' = if (deployPrivateEndpoints) {
+  //   name: kvSecretNameCartsInternalApiEndpoint
+  //   tags: resourceTags
+  //   properties: {
+  //     contentType: 'endpoint url (fqdn) of the (internal) carts api'
+  //     value: deployPrivateEndpoints ? cartsinternalapiaca.properties.configuration.ingress.fqdn : ''
+  //   }
+  // }
 
   // secret
   resource kv_secretCartsDbConnStr 'secrets' = {
@@ -1491,12 +1491,12 @@ module vnetWebSubnetNsg './modules/createNsg.bicep' = if (deployPrivateEndpoints
       nsgName: '${vnetWebSubnetName}-nsg-${resourceLocation}'
       nsgRules: [ 
         {
-          name: 'AllowHTTPInbound'
+          name: 'AllowHTTPInboundFromFD'
           protocol: 'Tcp'
           sourcePortRange: '*'
           destinationPortRange: '80'
-          sourceAddressPrefix: '*'
-          destinationAddressPrefix: '*'
+          //sourceAddressPrefix: 'AzureFrontDoor.Frontend'
+          //destinationAddressPrefix: 'VirtualNetwork'
           access: 'Allow'
           priority: '100'
           direction: 'Inbound'
@@ -1876,116 +1876,116 @@ resource runScriptToCreateProfileDatabase 'Microsoft.Resources/deploymentScripts
 // private dns zone
 //
 
-module privateDnsZone './modules/createPrivateDnsZone.bicep' = if (deployPrivateEndpoints) {
-  name: 'createPrivateDnsZone'
-  params: {
-    privateDnsZoneName: deployPrivateEndpoints ? join(skip(split(cartsinternalapiaca.properties.configuration.ingress.fqdn, '.'), 2), '.') : ''
-    privateDnsZoneVnetId: deployPrivateEndpoints ? vnet.id : ''
-    privateDnsZoneVnetLinkName: privateDnsZoneVnetLinkName
-    privateDnsZoneARecordName: deployPrivateEndpoints ? join(take(split(cartsinternalapiaca.properties.configuration.ingress.fqdn, '.'), 2), '.') : ''
-    privateDnsZoneARecordIp: deployPrivateEndpoints ? cartsinternalapiacaenv.properties.staticIp : ''
-    resourceTags: resourceTags
-  }
-}
+// module privateDnsZone './modules/createPrivateDnsZone.bicep' = if (deployPrivateEndpoints) {
+//   name: 'createPrivateDnsZone'
+//   params: {
+//     privateDnsZoneName: deployPrivateEndpoints ? join(skip(split(cartsinternalapiaca.properties.configuration.ingress.fqdn, '.'), 2), '.') : ''
+//     privateDnsZoneVnetId: deployPrivateEndpoints ? vnet.id : ''
+//     privateDnsZoneVnetLinkName: privateDnsZoneVnetLinkName
+//     //privateDnsZoneARecordName: deployPrivateEndpoints ? join(take(split(cartsinternalapiaca.properties.configuration.ingress.fqdn, '.'), 2), '.') : ''
+//     //privateDnsZoneARecordIp: deployPrivateEndpoints ? cartsinternalapiacaenv.properties.staticIp : ''
+//     resourceTags: resourceTags
+//   }
+// }
 
 // aca environment (internal)
-resource cartsinternalapiacaenv 'Microsoft.App/managedEnvironments@2022-06-01-preview' = if (deployPrivateEndpoints) {
-  name: cartsInternalApiAcaEnvName
-  location: resourceLocation
-  tags: resourceTags
-  sku: {
-    name: 'Consumption'
-  }
-  properties: {
-    zoneRedundant: false
-    vnetConfiguration: {
-      infrastructureSubnetId: deployPrivateEndpoints ? vnet.properties.subnets[0].id : ''
-      internal: true
-    }
-  }
-}
+// resource cartsinternalapiacaenv 'Microsoft.App/managedEnvironments@2022-06-01-preview' = if (deployPrivateEndpoints) {
+//   name: cartsInternalApiAcaEnvName
+//   location: resourceLocation
+//   tags: resourceTags
+//   sku: {
+//     name: 'Consumption'
+//   }
+//   properties: {
+//     zoneRedundant: false
+//     vnetConfiguration: {
+//       infrastructureSubnetId: deployPrivateEndpoints ? vnet.properties.subnets[0].id : ''
+//       internal: true
+//     }
+//   }
+// }
 
 // aca (internal)
-resource cartsinternalapiaca 'Microsoft.App/containerApps@2022-06-01-preview' = if (deployPrivateEndpoints) {
-  name: cartsInternalApiAcaName
-  location: resourceLocation
-  tags: resourceTags
-  identity: {
-    type: 'UserAssigned'
-    userAssignedIdentities: {
-      '${userassignedmiforkvaccess.id}': {}
-    }
-  }
-  properties: {
-    configuration: {
-      activeRevisionsMode: 'Single'
-      ingress: {
-        external: true
-        allowInsecure: false
-        targetPort: 80
-        traffic: [
-          {
-            latestRevision: true
-            weight: 100
-          }
-        ]
-      }
-      registries: [
-        {
-          passwordSecretRef: cartsInternalApiAcaSecretAcrPassword
-          server: acr.properties.loginServer
-          username: acr.name
-        }
-      ]
-      secrets: [
-        {
-          name: cartsInternalApiAcaSecretAcrPassword
-          value: acr.listCredentials().passwords[0].value
-        }
-      ]
-    }
-    environmentId: cartsinternalapiacaenv.id
-    template: {
-      scale: {
-        minReplicas: 1
-        maxReplicas: 3
-        rules: [
-          {
-            name: 'http-scaling-rule'
-            http: {
-              metadata: {
-                concurrentRequests: '3'
-              }
-            }
-          }
-        ]
-      }
-      containers: [
-        {
-          env: [
-            {
-              name: cartsInternalApiSettingNameKeyVaultEndpoint
-              value: kv.properties.vaultUri
-            }
-            {
-              name: cartsInternalApiSettingNameManagedIdentityClientId
-              value: userassignedmiforkvaccess.properties.clientId
-            }
-          ]
-          // using a public image initially because no images have been pushed to our private ACR yet
-          // at this point. At a later point, our github workflow will update the ACA app to use the 
-          // images from our private ACR.
-          image: 'mcr.microsoft.com/azuredocs/containerapps-helloworld:latest'
-          name: cartsInternalApiAcaContainerDetailsName
-          resources: {
-            cpu: json('0.5')
-            memory: '1.0Gi'
-          }
-        }
-      ]
-    }
-  }
-}
+// resource cartsinternalapiaca 'Microsoft.App/containerApps@2022-06-01-preview' = if (deployPrivateEndpoints) {
+//   name: cartsInternalApiAcaName
+//   location: resourceLocation
+//   tags: resourceTags
+//   identity: {
+//     type: 'UserAssigned'
+//     userAssignedIdentities: {
+//       '${userassignedmiforkvaccess.id}': {}
+//     }
+//   }
+//   properties: {
+//     configuration: {
+//       activeRevisionsMode: 'Single'
+//       ingress: {
+//         external: true
+//         allowInsecure: false
+//         targetPort: 80
+//         traffic: [
+//           {
+//             latestRevision: true
+//             weight: 100
+//           }
+//         ]
+//       }
+//       registries: [
+//         {
+//           passwordSecretRef: cartsInternalApiAcaSecretAcrPassword
+//           server: acr.properties.loginServer
+//           username: acr.name
+//         }
+//       ]
+//       secrets: [
+//         {
+//           name: cartsInternalApiAcaSecretAcrPassword
+//           value: acr.listCredentials().passwords[0].value
+//         }
+//       ]
+//     }
+//     environmentId: cartsinternalapiacaenv.id
+//     template: {
+//       scale: {
+//         minReplicas: 1
+//         maxReplicas: 3
+//         rules: [
+//           {
+//             name: 'http-scaling-rule'
+//             http: {
+//               metadata: {
+//                 concurrentRequests: '3'
+//               }
+//             }
+//           }
+//         ]
+//       }
+//       containers: [
+//         {
+//           env: [
+//             {
+//               name: cartsInternalApiSettingNameKeyVaultEndpoint
+//               value: kv.properties.vaultUri
+//             }
+//             {
+//               name: cartsInternalApiSettingNameManagedIdentityClientId
+//               value: userassignedmiforkvaccess.properties.clientId
+//             }
+//           ]
+//           // using a public image initially because no images have been pushed to our private ACR yet
+//           // at this point. At a later point, our github workflow will update the ACA app to use the 
+//           // images from our private ACR.
+//           image: 'mcr.microsoft.com/azuredocs/containerapps-helloworld:latest'
+//           name: cartsInternalApiAcaContainerDetailsName
+//           resources: {
+//             cpu: json('0.5')
+//             memory: '1.0Gi'
+//           }
+//         }
+//       ]
+//     }
+//   }
+// }
 
 //
 // chaos studio

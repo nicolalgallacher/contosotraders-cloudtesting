@@ -447,8 +447,8 @@ jobs:
                           --name CustomScriptExtension \
                           --publisher Microsoft.Compute \
                           --vm-name $name \
-                          --resource-group $resourceGroupName \
-                          --settings '{"fileUris":["https://raw.githubusercontent.com/nicolalgallacher/contosotraders-cloudtesting/iis-testing/iac/scripts/BlobToIisCopy.ps1"],"commandToExecute":".\BlobToIisCopy.ps1 -storageAccountKey "$storageAccountKey"}' 
+                          --resource-group $resourceGroupName \ 
+                          --settings '{"fileUris":["https://raw.githubusercontent.com/${{github.repository}}/iis-testing/iac/scripts/BlobToIisCopy.ps1"],"commandToExecute":".\BlobToIisCopy.ps1 -storageAccountKey "$storageAccountKey"}' 
                         done    
       - name: purge ui cdn endpoint
         uses: azure/CLI@v1
