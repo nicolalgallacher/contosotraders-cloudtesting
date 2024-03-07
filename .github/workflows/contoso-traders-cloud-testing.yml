@@ -429,8 +429,27 @@ jobs:
         working-directory: src/ContosoTraders.Ui.Website
       - name: deploy ui to storage
         uses: azure/CLI@v1
-        with:
+        with:  
           inlineScript: az storage blob sync --account-name '${{ env.UI_STORAGE_ACCOUNT_NAME }}${{ vars.SUFFIX }}' -c '$web' -s 'src/ContosoTraders.Ui.Website/build'
+      - name: IIS Copy # IIS / Script needs to be in storage account for custom extension 
+        uses: azure/CLI@v1
+        with:
+          inlineScript: |
+                      az vm list --resource-group ${{ env.RESOURCE_GROUP_NAME }}${{ vars.SUFFIX }} --show-details --query "[?powerState=='VM running' && storageProfile.osDisk.osType=='Windows' && contains(name, 'iis')].{Name:name, ResourceGroupName:resourceGroup}" -o json | \
+                      jq -c '.[]' | \
+          
+                        while read vm; do
+                          name=$(echo $vm | jq -r '.Name')
+                          resourceGroupName=$(echo $vm | jq -r '.ResourceGroupName')
+                          storageAccountKey=$(az storage account keys list --account-name '${{ env.UI_STORAGE_ACCOUNT_NAME }}${{ vars.SUFFIX }}' --resource-group '${{ env.RESOURCE_GROUP_NAME }}${{ vars.SUFFIX }}' --query "[0].value" -o tsv)
+                        
+                          az vm extension set \
+                          --name CustomScriptExtension \
+                          --publisher Microsoft.Compute \
+                          --vm-name $name \
+                          --resource-group $resourceGroupName \ 
+                          --settings '{"fileUris":["https://raw.githubusercontent.com/${{github.repository}}/iis-testing/iac/scripts/BlobToIisCopy.ps1"],"commandToExecute":".\BlobToIisCopy.ps1 -storageAccountKey "$storageAccountKey"}' 
+                        done    
       - name: purge ui cdn endpoint
         uses: azure/CLI@v1
         with:
@@ -454,11 +473,7 @@ jobs:
         uses: azure/CLI@v1
         with:
           inlineScript: echo UI CDN endpoint accessible at https://$(az keyvault secret show --vault-name ${{ env.KV_NAME }}${{ vars.SUFFIX }} --name uiCdnEndpoint --query value -o tsv)
-      - name: iis-AppCopy #IIS APP COPY 
-        uses: azure/CLI@v1 
-        with: 
-          inlineScript: az storage blob download --account-name ${{ env.UI_STORAGE_ACCOUNT_NAME }} --account-key ${{ secrets.UI_STORAGE_KEY}} --destination '10.0.6.0\c$\ReactApp'
-
+    
   load-tests-with-chaos-products-api:
     needs: [provision, playwright-tests-ui]
     runs-on: ubuntu-22.04
@@ -678,4 +693,3 @@ jobs:
           retention-days: 30
 
      
-

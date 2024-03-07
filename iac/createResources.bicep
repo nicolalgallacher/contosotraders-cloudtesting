@@ -186,6 +186,10 @@ var sqlVmShutdownScheduleTimezoneId = 'UTC'
 //iis vm's
 var iisVmUsername = 'iisAdmin'
 
+// iis front door
+
+var frontDoorClassicName = 'contosoTradersFDIIS'
+
 
 // private dns zone
 var privateDnsZoneVnetLinkName = '${prefixHyphenated}-privatednszone-vnet-link${suffix}'
@@ -561,47 +565,47 @@ resource productsapiappsvc 'Microsoft.Web/sites@2022-03-01' = {
 // products db
 //
 
-// sql azure server
-resource productsdbsrv 'Microsoft.Sql/servers@2022-05-01-preview' = if (!deploySqlOnIaas) {
-  name: productsDbServerName
-  location: resourceLocation
-  tags: resourceTags
-  properties: {
-    administratorLogin: productsDbServerAdminLogin
-    administratorLoginPassword: productsDbServerAdminPassword
-    publicNetworkAccess: 'Enabled'
-  }
+// // sql azure server
+// resource productsdbsrv 'Microsoft.Sql/servers@2022-05-01-preview' = if (!deploySqlOnIaas) {
+//   name: productsDbServerName
+//   location: resourceLocation
+//   tags: resourceTags
+//   properties: {
+//     administratorLogin: productsDbServerAdminLogin
+//     administratorLoginPassword: productsDbServerAdminPassword
+//     publicNetworkAccess: 'Enabled'
+//   }
 
-  // sql azure database
-  resource productsdbsrv_db 'databases' =  {
-    name: productsDbName
-    location: resourceLocation
-    tags: resourceTags
-    sku: {
-      capacity: 5
-      tier: 'Basic'
-      name: 'Basic'
-    }
-  }
+//   // sql azure database
+//   resource productsdbsrv_db 'databases' =  {
+//     name: productsDbName
+//     location: resourceLocation
+//     tags: resourceTags
+//     sku: {
+//       capacity: 5
+//       tier: 'Basic'
+//       name: 'Basic'
+//     }
+//   }
 
-  // sql azure firewall rule (allow access from all azure resources/services)
-  resource productsdbsrv_db_fwlallowazureresources 'firewallRules' = {
-    name: 'AllowAllWindowsAzureIps'
-    properties: {
-      endIpAddress: '0.0.0.0'
-      startIpAddress: '0.0.0.0'
-    }
-  }
+//   // sql azure firewall rule (allow access from all azure resources/services)
+//   resource productsdbsrv_db_fwlallowazureresources 'firewallRules' = {
+//     name: 'AllowAllWindowsAzureIps'
+//     properties: {
+//       endIpAddress: '0.0.0.0'
+//       startIpAddress: '0.0.0.0'
+//     }
+//   }
 
-  // @TODO: Hack to enable temporary access to devs during local development/debugging.
-  resource productsdbsrv_db_fwllocaldev 'firewallRules' = {
-    name: 'AllowLocalDevelopment'
-    properties: {
-      endIpAddress: '255.255.255.255'
-      startIpAddress: '0.0.0.0'
-    }
-  }
-}
+//   // @TODO: Hack to enable temporary access to devs during local development/debugging.
+//   resource productsdbsrv_db_fwllocaldev 'firewallRules' = {
+//     name: 'AllowLocalDevelopment'
+//     properties: {
+//       endIpAddress: '255.255.255.255'
+//       startIpAddress: '0.0.0.0'
+//     }
+//   }
+// }
 
 //
 // profiles db
@@ -1485,7 +1489,19 @@ module vnetWebSubnetNsg './modules/createNsg.bicep' = if (deployPrivateEndpoints
     params: {
       location: resourceLocation
       nsgName: '${vnetWebSubnetName}-nsg-${resourceLocation}'
-      nsgRules: []
+      nsgRules: [ 
+        {
+          name: 'AllowHTTPInboundFromFD'
+          protocol: 'Tcp'
+          sourcePortRange: '*'
+          destinationPortRange: '80'
+          //sourceAddressPrefix: 'AzureFrontDoor.Frontend'
+          //destinationAddressPrefix: 'VirtualNetwork'
+          access: 'Allow'
+          priority: '100'
+          direction: 'Inbound'
+        }
+             ]
       resourceTags: resourceTags
     }
     dependsOn: [
@@ -1596,10 +1612,22 @@ module iisVMs './modules/createIisVM.bicep' = { //TODO: Add Feature Flag
     exsistingSubnetName:vnetWebSubnetName 
     exsistingVirtualNetworkName: vnetName 
     exsitingVNetResourceGroup: resourceGroup().name
+    // azCopyScript: loadTextContent('./scripts/azcopyInstall.ps1')
   }
-  
+}
 
+//FrontDoor
+
+module frontDoor 'modules/createFrontDoorClassic.bicep' = {
+  name: 'createFrontDoor'
+  params: {
+     backendAddress: iisVMs.outputs.lbIPAddress
+     frontDoorName: frontDoorClassicName
   }
+  dependsOn: [
+     iisVMs
+  ]
+}
 
 //
 // jumpbox vm
