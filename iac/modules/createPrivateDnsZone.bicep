@@ -12,8 +12,8 @@
 param privateDnsZoneName string
 param privateDnsZoneVnetId string
 param privateDnsZoneVnetLinkName string
-//param privateDnsZoneARecordName string
-//param privateDnsZoneARecordIp string
+param privateDnsZoneARecordName string
+param privateDnsZoneARecordIp string
 param resourceTags object
 
 // private dns zone
@@ -38,15 +38,15 @@ resource privdnszone_vnetlink 'Microsoft.Network/privateDnsZones/virtualNetworkL
 }
 
 // private dns zone: 'A' record
-// resource symbolicname 'Microsoft.Network/privateDnsZones/A@2020-06-01' = {
-//   name: privateDnsZoneARecordName
-//   parent: privdnszone
-//   properties: {
-//     aRecords: [
-//       {
-//         ipv4Address: privateDnsZoneARecordIp
-//       }
-//     ]
-//     ttl: 3600
-//   }
-// }
+resource symbolicname 'Microsoft.Network/privateDnsZones/A@2020-06-01' = {
+  name: privateDnsZoneARecordName
+  parent: privdnszone
+  properties: {
+    aRecords: [
+      {
+        ipv4Address: privateDnsZoneARecordIp
+      }
+    ]
+    ttl: 3600
+  }
+}
