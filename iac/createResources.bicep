@@ -197,7 +197,7 @@ var sqlVmShutdownScheduleTimezoneId = 'UTC'
 //iis vm's - NG
 var iisVmUsername = 'iisAdmin'
 // iis front door - NG 
-var frontDoorClassicName = 'contosoTradersFDIIS'
+//var frontDoorClassicName = 'contosoTradersFDIIS'
 
 // private dns zone
 var privateDnsZoneVnetLinkName = '${prefixHyphenated}-privatednszone-vnet-link${suffix}'
