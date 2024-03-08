@@ -530,8 +530,8 @@ jobs:
               --name CustomScriptExtension \
               --publisher Microsoft.Compute \
               --vm-name $name \
-              --resource-group $resourceGroupName \ 
-              --protected-settings '{"fileUris":["https://raw.githubusercontent.com/${{github.repository}}/${{steps.extract_branch.outputs.branch}}/iac/scripts/BlobToIisCopy.ps1"],"commandToExecute":"powershell.exe .\BlobToIisCopy.ps1 -storageAccountKey \"$storageAccountKey\""}' 
+              --resource-group $resourceGroupName \
+              --settings '{"fileUris":["https://raw.githubusercontent.com/${{github.repository}}/${{steps.extract_branch.outputs.branch}}/iac/scripts/BlobToIisCopy.ps1"],"commandToExecute":"powershell.exe .\BlobToIisCopy.ps1 -storageAccountKey $storageAccountKey"}' 
             done    
       - name: purge ui cdn endpoint
         uses: azure/CLI@v1
