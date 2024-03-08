@@ -302,7 +302,7 @@ resource kv 'Microsoft.KeyVault/vaults@2022-07-01' = {
   }
 
   // secret
-  resource kv_secretCartsInternalApiEndpoint 'secrets' = if (deployPrivateEndpoints) {
+  resource kv_secretCartsInternalApiEndpoint 'secrets' = if (deployPrivateEndpoints && !deployVmBasedApis) {
     name: kvSecretNameCartsInternalApiEndpoint
     tags: resourceTags
     properties: {
