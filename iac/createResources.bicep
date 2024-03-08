@@ -1945,19 +1945,19 @@ module iisVMs './modules/createIisVM.bicep' = { //TODO: Add Feature Flag
   }
 }
 
-///
-/// FrontDoor Classic - NG 
-///
-module frontDoor 'modules/createFrontDoorClassic.bicep' = {
-  name: 'createFrontDoor'
-  params: {
-     backendAddress: iisVMs.outputs.lbIPAddress
-     frontDoorName: frontDoorClassicName
-  }
-  dependsOn: [
-     iisVMs
-  ]
-}
+// ///
+// /// FrontDoor Classic - NG 
+// ///
+// module frontDoor 'modules/createFrontDoorClassic.bicep' = {
+//   name: 'createFrontDoor'
+//   params: {
+//      backendAddress: iisVMs.outputs.lbIPAddress
+//      frontDoorName: frontDoorClassicName
+//   }
+//   dependsOn: [
+//      iisVMs
+//   ]
+// }
 
 // aca environment (internal)
 resource cartsinternalapiacaenv 'Microsoft.App/managedEnvironments@2022-06-01-preview' = if (deployPrivateEndpoints) {
