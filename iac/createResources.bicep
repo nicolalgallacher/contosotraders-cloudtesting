@@ -1918,7 +1918,7 @@ resource runScriptToCreateProfileDatabase 'Microsoft.Resources/deploymentScripts
 // private dns zone
 //
 
-module privateDnsZone './modules/createPrivateDnsZone.bicep' = if (deployPrivateEndpoints && !deployVmBasedApis) {
+module privateDnsZone './modules/createPrivateDnsZone.bicep' = if ((deployPrivateEndpoints) && (!deployVmBasedApis)) {
   name: 'createPrivateDnsZone'
   params: {
     privateDnsZoneName: deployPrivateEndpoints ? join(skip(split(cartsinternalapiaca.properties.configuration.ingress.fqdn, '.'), 2), '.') : ''
@@ -1961,7 +1961,7 @@ module iisVMs './modules/createIisVM.bicep' = { //TODO: Add Feature Flag
 // }
 
 // aca environment (internal)
-resource cartsinternalapiacaenv 'Microsoft.App/managedEnvironments@2022-06-01-preview' = if (deployPrivateEndpoints && !deployVmBasedApis) {
+resource cartsinternalapiacaenv 'Microsoft.App/managedEnvironments@2022-06-01-preview' = if ((deployPrivateEndpoints) && (!deployVmBasedApis)) {
   name: cartsInternalApiAcaEnvName
   location: resourceLocation
   tags: resourceTags
@@ -1978,7 +1978,7 @@ resource cartsinternalapiacaenv 'Microsoft.App/managedEnvironments@2022-06-01-pr
 }
 
 // aca (internal)
-resource cartsinternalapiaca 'Microsoft.App/containerApps@2022-06-01-preview' = if (deployPrivateEndpoints && !deployVmBasedApis) {
+resource cartsinternalapiaca 'Microsoft.App/containerApps@2022-06-01-preview' = if ((deployPrivateEndpoints) && (!deployVmBasedApis)) {
   name: cartsInternalApiAcaName
   location: resourceLocation
   tags: resourceTags
