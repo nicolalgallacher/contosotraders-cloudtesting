@@ -14,6 +14,12 @@ param suffix string
 @description('A password which will be set on all SQL Azure DBs.')
 param sqlPassword string // @TODO: Obviously, we need to fix this!
 
+//IIS Params - NG
+@secure()
+@description('Password set for IIS machines, pulled from yaml config / Github secrets')
+param iisVmPassword string 
+
+
 param resourceLocation string = resourceGroup().location
 
 // tenant
@@ -50,6 +56,7 @@ var kvSecretNameProductsDbConnStr = 'productsDbConnectionString'
 var kvSecretNameProfilesDbConnStr = 'profilesDbConnectionString'
 var kvSecretNameStocksDbConnStr = 'stocksDbConnectionString'
 var kvSecretNameCartsApiEndpoint = 'cartsApiEndpoint'
+
 // var kvSecretNameCartsInternalApiEndpoint = 'cartsInternalApiEndpoint'
 var kvSecretNameCartsDbConnStr = 'cartsDbConnectionString'
 var kvSecretNameImagesEndpoint = 'imagesEndpoint'
@@ -188,6 +195,11 @@ var sqlVmAdminPassword = sqlPassword
 var sqlVmShutdownScheduleName = 'shutdown-computevm-sqlvm'
 var sqlVmShutdownScheduleTimezoneId = 'UTC'
 
+//iis vm's - NG
+var iisVmUsername = 'iisAdmin'
+// iis front door - NG 
+//var frontDoorClassicName = 'contosoTradersFDIIS'
+
 // private dns zone
 // var privateDnsZoneVnetLinkName = '${prefixHyphenated}-privatednszone-vnet-link${suffix}'
 
@@ -291,6 +303,7 @@ resource kv 'Microsoft.KeyVault/vaults@2022-07-01' = {
     }
   }
 
+  
   // secret - different for VM based APIs
   resource kv_secretCartsApiEndpointvm 'secrets' = if (deployVmBasedApis) {
     name: kvSecretNameCartsApiEndpoint
@@ -300,6 +313,7 @@ resource kv 'Microsoft.KeyVault/vaults@2022-07-01' = {
       value: newFrontDoor.outputs.VmCartApiEndpoint
     }
   }
+
 
   // secret
   // resource kv_secretCartsInternalApiEndpoint 'secrets' = if (deployPrivateEndpoints && !deployVmBasedApis) {
@@ -1553,7 +1567,19 @@ module vnetWebSubnetNsg './modules/createNsg.bicep' = if (deployPrivateEndpoints
     params: {
       location: resourceLocation
       nsgName: '${vnetWebSubnetName}-nsg-${resourceLocation}'
-      nsgRules: []
+      nsgRules: [
+        { //NG
+          name: 'Allow80FDInbound'
+          protocol: 'Tcp'
+          sourcePortRange: '*'
+          destinationPortRange: '80'
+          sourceAddressPrefix: 'AzureFrontDoor.Frontend'
+          destinationAddressPrefix: 'AzureLoadBalancer'
+          access: 'Allow'
+          priority: '100'
+          direction: 'Inbound'
+        }
+      ]
       resourceTags: resourceTags
     }
 }
@@ -1906,6 +1932,37 @@ resource runScriptToCreateProfileDatabase 'Microsoft.Resources/deploymentScripts
 //   }
 // }
 
+///
+///  IIS VMs - NG 
+///
+
+module iisVMs './modules/createIisVM.bicep' = { //TODO: Add Feature Flag 
+  name: 'createIIS'
+  params: {
+    location:resourceLocation
+    adminPassword: iisVmPassword
+    adminUsername: iisVmUsername 
+    exsistingSubnetName:vnetWebSubnetName 
+    exsistingVirtualNetworkName: vnetName 
+    exsitingVNetResourceGroup: resourceGroup().name
+  }
+}
+
+// ///
+// /// FrontDoor Classic - NG 
+// ///
+// module frontDoor 'modules/createFrontDoorClassic.bicep' = {
+//   name: 'createFrontDoor'
+//   params: {
+//      backendAddress: iisVMs.outputs.lbIPAddress
+//      frontDoorName: frontDoorClassicName
+//   }
+//   dependsOn: [
+//      iisVMs
+//   ]
+// }
+
+
 // // aca environment (internal)
 // resource cartsinternalapiacaenv 'Microsoft.App/managedEnvironments@2022-06-01-preview' = if (deployPrivateEndpoints && !deployVmBasedApis) {
 //   name: cartsInternalApiAcaEnvName
@@ -1924,6 +1981,7 @@ resource runScriptToCreateProfileDatabase 'Microsoft.Resources/deploymentScripts
 // }
 
 // // aca (internal)
+
 // resource cartsinternalapiaca 'Microsoft.App/containerApps@2022-06-01-preview' = if (deployPrivateEndpoints && !deployVmBasedApis) {
 //   name: cartsInternalApiAcaName
 //   location: resourceLocation
