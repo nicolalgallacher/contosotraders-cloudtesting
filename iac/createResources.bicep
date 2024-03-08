@@ -50,7 +50,7 @@ var kvSecretNameProductsDbConnStr = 'productsDbConnectionString'
 var kvSecretNameProfilesDbConnStr = 'profilesDbConnectionString'
 var kvSecretNameStocksDbConnStr = 'stocksDbConnectionString'
 var kvSecretNameCartsApiEndpoint = 'cartsApiEndpoint'
-var kvSecretNameCartsInternalApiEndpoint = 'cartsInternalApiEndpoint'
+// var kvSecretNameCartsInternalApiEndpoint = 'cartsInternalApiEndpoint'
 var kvSecretNameCartsDbConnStr = 'cartsDbConnectionString'
 var kvSecretNameImagesEndpoint = 'imagesEndpoint'
 var kvSecretNameAppInsightsConnStr = 'appInsightsConnectionString'
@@ -99,12 +99,12 @@ var cartsApiSettingNameKeyVaultEndpoint = 'KeyVaultEndpoint'
 var cartsApiSettingNameManagedIdentityClientId = 'ManagedIdentityClientId'
 
 // azure container app (carts api - internal only)
-var cartsInternalApiAcaName = '${prefixHyphenated}-intcarts${suffix}'
-var cartsInternalApiAcaEnvName = '${prefix}intacaenv${suffix}'
-var cartsInternalApiAcaSecretAcrPassword = 'acr-password'
-var cartsInternalApiAcaContainerDetailsName = '${prefixHyphenated}-intcarts${suffix}'
-var cartsInternalApiSettingNameKeyVaultEndpoint = 'KeyVaultEndpoint'
-var cartsInternalApiSettingNameManagedIdentityClientId = 'ManagedIdentityClientId'
+// var cartsInternalApiAcaName = '${prefixHyphenated}-intcarts${suffix}'
+// var cartsInternalApiAcaEnvName = '${prefix}intacaenv${suffix}'
+// var cartsInternalApiAcaSecretAcrPassword = 'acr-password'
+// var cartsInternalApiAcaContainerDetailsName = '${prefixHyphenated}-intcarts${suffix}'
+// var cartsInternalApiSettingNameKeyVaultEndpoint = 'KeyVaultEndpoint'
+// var cartsInternalApiSettingNameManagedIdentityClientId = 'ManagedIdentityClientId'
 
 // storage account (product images)
 var productImagesStgAccName = '${prefix}img${suffix}'
@@ -189,7 +189,7 @@ var sqlVmShutdownScheduleName = 'shutdown-computevm-sqlvm'
 var sqlVmShutdownScheduleTimezoneId = 'UTC'
 
 // private dns zone
-var privateDnsZoneVnetLinkName = '${prefixHyphenated}-privatednszone-vnet-link${suffix}'
+// var privateDnsZoneVnetLinkName = '${prefixHyphenated}-privatednszone-vnet-link${suffix}'
 
 // chaos studio
 var chaosKvExperimentName = '${prefixHyphenated}-chaos-kv-experiment${suffix}'
