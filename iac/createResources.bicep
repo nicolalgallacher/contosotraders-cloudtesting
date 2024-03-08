@@ -56,7 +56,8 @@ var kvSecretNameProductsDbConnStr = 'productsDbConnectionString'
 var kvSecretNameProfilesDbConnStr = 'profilesDbConnectionString'
 var kvSecretNameStocksDbConnStr = 'stocksDbConnectionString'
 var kvSecretNameCartsApiEndpoint = 'cartsApiEndpoint'
-//var kvSecretNameCartsInternalApiEndpoint = 'cartsInternalApiEndpoint'
+
+// var kvSecretNameCartsInternalApiEndpoint = 'cartsInternalApiEndpoint'
 var kvSecretNameCartsDbConnStr = 'cartsDbConnectionString'
 var kvSecretNameImagesEndpoint = 'imagesEndpoint'
 var kvSecretNameAppInsightsConnStr = 'appInsightsConnectionString'
@@ -105,12 +106,12 @@ var cartsApiSettingNameKeyVaultEndpoint = 'KeyVaultEndpoint'
 var cartsApiSettingNameManagedIdentityClientId = 'ManagedIdentityClientId'
 
 // azure container app (carts api - internal only)
-var cartsInternalApiAcaName = '${prefixHyphenated}-intcarts${suffix}'
-var cartsInternalApiAcaEnvName = '${prefix}intacaenv${suffix}'
-var cartsInternalApiAcaSecretAcrPassword = 'acr-password'
-var cartsInternalApiAcaContainerDetailsName = '${prefixHyphenated}-intcarts${suffix}'
-var cartsInternalApiSettingNameKeyVaultEndpoint = 'KeyVaultEndpoint'
-var cartsInternalApiSettingNameManagedIdentityClientId = 'ManagedIdentityClientId'
+// var cartsInternalApiAcaName = '${prefixHyphenated}-intcarts${suffix}'
+// var cartsInternalApiAcaEnvName = '${prefix}intacaenv${suffix}'
+// var cartsInternalApiAcaSecretAcrPassword = 'acr-password'
+// var cartsInternalApiAcaContainerDetailsName = '${prefixHyphenated}-intcarts${suffix}'
+// var cartsInternalApiSettingNameKeyVaultEndpoint = 'KeyVaultEndpoint'
+// var cartsInternalApiSettingNameManagedIdentityClientId = 'ManagedIdentityClientId'
 
 // storage account (product images)
 var productImagesStgAccName = '${prefix}img${suffix}'
@@ -200,7 +201,7 @@ var iisVmUsername = 'iisAdmin'
 //var frontDoorClassicName = 'contosoTradersFDIIS'
 
 // private dns zone
-var privateDnsZoneVnetLinkName = '${prefixHyphenated}-privatednszone-vnet-link${suffix}'
+// var privateDnsZoneVnetLinkName = '${prefixHyphenated}-privatednszone-vnet-link${suffix}'
 
 // chaos studio
 var chaosKvExperimentName = '${prefixHyphenated}-chaos-kv-experiment${suffix}'
@@ -313,8 +314,9 @@ resource kv 'Microsoft.KeyVault/vaults@2022-07-01' = {
     }
   }
 
-  // // secret
-  // resource kv_secretCartsInternalApiEndpoint 'secrets' = if (deployPrivateEndpoints) {
+
+  // secret
+  // resource kv_secretCartsInternalApiEndpoint 'secrets' = if (deployPrivateEndpoints && !deployVmBasedApis) {
   //   name: kvSecretNameCartsInternalApiEndpoint
   //   tags: resourceTags
   //   properties: {
@@ -1916,9 +1918,9 @@ resource runScriptToCreateProfileDatabase 'Microsoft.Resources/deploymentScripts
 
 //
 // private dns zone
-// //
+//
 
-// module privateDnsZone './modules/createPrivateDnsZone.bicep' = if ((deployPrivateEndpoints) && (!deployVmBasedApis)) {
+// module privateDnsZone './modules/createPrivateDnsZone.bicep' = if (deployPrivateEndpoints && !deployVmBasedApis) {
 //   name: 'createPrivateDnsZone'
 //   params: {
 //     privateDnsZoneName: deployPrivateEndpoints ? join(skip(split(cartsinternalapiaca.properties.configuration.ingress.fqdn, '.'), 2), '.') : ''
@@ -1960,8 +1962,9 @@ module iisVMs './modules/createIisVM.bicep' = { //TODO: Add Feature Flag
 //   ]
 // }
 
+
 // // aca environment (internal)
-// resource cartsinternalapiacaenv 'Microsoft.App/managedEnvironments@2022-06-01-preview' = if ((deployPrivateEndpoints) && (!deployVmBasedApis)) {
+// resource cartsinternalapiacaenv 'Microsoft.App/managedEnvironments@2022-06-01-preview' = if (deployPrivateEndpoints && !deployVmBasedApis) {
 //   name: cartsInternalApiAcaEnvName
 //   location: resourceLocation
 //   tags: resourceTags
@@ -1978,7 +1981,8 @@ module iisVMs './modules/createIisVM.bicep' = { //TODO: Add Feature Flag
 // }
 
 // // aca (internal)
-// resource cartsinternalapiaca 'Microsoft.App/containerApps@2022-06-01-preview' = if ((deployPrivateEndpoints) && (!deployVmBasedApis)) {
+
+// resource cartsinternalapiaca 'Microsoft.App/containerApps@2022-06-01-preview' = if (deployPrivateEndpoints && !deployVmBasedApis) {
 //   name: cartsInternalApiAcaName
 //   location: resourceLocation
 //   tags: resourceTags
