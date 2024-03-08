@@ -302,6 +302,7 @@ resource kv 'Microsoft.KeyVault/vaults@2022-07-01' = {
     }
   }
 
+  
   // secret - different for VM based APIs
   resource kv_secretCartsApiEndpointvm 'secrets' = if (deployVmBasedApis) {
     name: kvSecretNameCartsApiEndpoint
@@ -318,7 +319,7 @@ resource kv 'Microsoft.KeyVault/vaults@2022-07-01' = {
     tags: resourceTags
     properties: {
       contentType: 'endpoint url (fqdn) of the (internal) carts api'
-      value: deployPrivateEndpoints ? cartsinternalapiaca.properties.configuration.ingress.fqdn : ''
+      value: deployPrivateEndpoints && !deployVmBasedApis ? cartsinternalapiaca.properties.configuration.ingress.fqdn : ''
     }
   }
 
